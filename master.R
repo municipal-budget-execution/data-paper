@@ -92,7 +92,7 @@
       
       print("Thiago (WB) has been selected")
       
-      dropbox_dir  <- "/Users/thiagoscott/Dropbox/Brazil_Procurement"
+      dropbox_dir  <- "/Users/thiagoscott/Dropbox/MiDES-data-paper-replication"
       github_dir   <- "/Users/thiagoscott/Documents/GitHub/data-paper"
       
     } 
