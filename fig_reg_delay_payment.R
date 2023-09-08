@@ -8,10 +8,10 @@
   
   # Convert fractions to percentages for all variables starting with 'over_'
   data_munic = data_munic[, (grep("^over_", names(data_munic))) := lapply(.SD, function(x) x * 100), 
-                          .SDcols = grep("^over_", names(data_munic))][year %in% seq(2014, 2020),]
+                          .SDcols = grep("^over_", names(data_munic))]
   
   # We exclude it cause we don't have procurement data for this state
-  data_plot = data_munic[state != "PE",]
+  data_plot = data_munic[state != "PE",][year %in% seq(2014, 2020),]
   
 }
 
@@ -190,7 +190,7 @@
     reg_models[[i]] <- as.formula(paste0(outcome, " ~ log(gdp) + log(population) | state + year"))
     
     for (reg in seq(i - 1, i)) {
-      reg_results[[reg]] <- fixest::feols(reg_models[[reg]], data = data_munic[state != "PE"])
+      reg_results[[reg]] <- fixest::feols(reg_models[[reg]], data = data_munic[state != "PE"][year %in% seq(2014, 2020),])
     }
   }
   
