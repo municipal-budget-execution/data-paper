@@ -44,8 +44,8 @@
         "binsreg",
         "basedosdados",
         "ggtext",
-        "pdf_table"
-      )
+        "dplyr"
+        )
     
     # If the package is not installed, then install it 
     if (!require("pacman")) install.packages("pacman")
@@ -141,12 +141,11 @@
 
 {
   
-  # 3.1: this code generates the histogram of non-competitive tenders
-  source(file.path(github_dir, "example_paper.R"))
-  
-  # 3.2: this code generates CDFs and Histogram of average delay
+  # 3.1: this code generates CDFs and Histogram of average delay
   source(file.path(github_dir, "fig_reg_delay_payment.R"))
   
+  # 3.2: this code generates the histogram of non-competitive tenders
+  source(file.path(github_dir, "example_paper.R"))
 
   
 }

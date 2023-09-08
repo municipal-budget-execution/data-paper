@@ -14,7 +14,7 @@ The code in this replication package constructs the analysis files from data pro
 
 #### Runtime Requirements
 
-Approximate time needed to reproduce the analyses on a standard 2023 machine: TBD minutes
+Approximate time needed to reproduce the analyses on a standard 2023 machine: 8 minutes
 
 ### List of tables and programs
 

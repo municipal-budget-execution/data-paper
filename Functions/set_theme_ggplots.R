@@ -3,7 +3,6 @@ set_theme <- function(
     
     theme = theme_classic(),
     size = 16, 
-    title_size = size + 0.4*size,
     title_hjust = 0.5,
     y_title_size = size,
     x_title_size = size,
@@ -26,7 +25,8 @@ set_theme <- function(
     plot_caption_position = "plot",
     axis_line_x  = element_blank(),
     axis_line_y = element_blank(),
-    axis_text_x = element_markdown(size = y_text_size, color = y_text_color, family="LM Roman 10"),
+    axis_text_x = element_markdown(size = x_text_size, color = y_text_color, family="LM Roman 10"),
+    axis_text_y = element_markdown(size = y_text_size, color = y_text_color, family="LM Roman 10"),
     legend_box_background = element_rect(fill = "white", color = "black")
     
 ) {
@@ -102,10 +102,10 @@ set_theme <- function(
   }
   
   theme + theme(
-    plot.title =  element_text(hjust = -0.05, size = y_text_size, color = y_text_color, family="LM Roman 10"),
+    plot.title =  element_text(hjust = -0.05, size = size, color = y_text_color, family="LM Roman 10"),
     axis.title.y = eval(parse(text = y_title)),
     axis.title.x = eval(parse(text = x_title)),
-    axis.text.y = element_text(size = y_text_size, color = y_text_color, family="LM Roman 10"),
+    axis.text.y = axis_text_y,
     axis.text.x = axis_text_x,
     axis.line.x = axis_line_x , # manual axes
     axis.line.y = axis_line_y,

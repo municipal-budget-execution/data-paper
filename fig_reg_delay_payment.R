@@ -8,7 +8,7 @@
   
   # Convert fractions to percentages for all variables starting with 'over_'
   data_munic = data_munic[, (grep("^over_", names(data_munic))) := lapply(.SD, function(x) x * 100), 
-             .SDcols = grep("^over_", names(data_munic))][year %in% seq(2014, 2020),]
+                          .SDcols = grep("^over_", names(data_munic))][year %in% seq(2014, 2020),]
   
   # We exclude it cause we don't have procurement data for this state
   data_plot = data_munic[state != "PE",]

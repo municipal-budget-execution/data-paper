@@ -20,7 +20,12 @@ pdf_table <- function(table, file_name) {
         
         cat("\\documentclass[border=10pt]{standalone}", "\n", file = file_name, append = "TRUE")
         cat("\\usepackage{varwidth}", "\n", file = file_name, append = "TRUE")
+        cat("\\usepackage{amssymb}", "\n", file = file_name, append = "TRUE")
+        cat("\\newcommand{\\cmark}{\\ding{51}}", "\n", file = file_name, append = "TRUE")
+        cat("\\newcommand{\\xmark}{\\ding{55}}", "\n", file = file_name, append = "TRUE")
+        cat("\\usepackage{pifont}", "\n", file = file_name, append = "TRUE")
         cat("\\usepackage{booktabs}", "\n", file = file_name, append = "TRUE")
+        
         cat("\\begin{document}", "\n", file = file_name, append = "TRUE")
         cat("\\begin{varwidth}{2000pt}", "\n", file = file_name, append = "TRUE")
         
@@ -41,4 +46,17 @@ pdf_table <- function(table, file_name) {
   pdflatex(
     file_name
   )
+  
+  if (file.exists(file_name)) {
+    
+    unlink(file_name)
+    
+  }
+  
+  for (j in 3:(length(table) - 1)) { # loop over the length of each table 
+      
+      cat((table)[j], "\n", file = file_name, append = "TRUE")
+    
+    }
+  
 }
