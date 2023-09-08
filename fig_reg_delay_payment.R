@@ -255,7 +255,7 @@
   )
   
   table_a1 <- c(
-    table_a1[1:12], 
+    table_a1[1:13], 
     "\\\\",
     "  Year Fixed Effects   & \\checkmark & \\checkmark & \\checkmark & \\checkmark & \\checkmark & \\checkmark \\\\  ",
     "  State Fixed Effects  & \\xmark  & \\checkmark & \\xmark  & \\checkmark & \\xmark  & \\checkmark \\\\  ",
