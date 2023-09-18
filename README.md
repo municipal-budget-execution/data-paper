@@ -4,7 +4,7 @@
 
 ### Overview
 
-The code in this replication package constructs the analysis files from data provided by State Audit Courts (TCEs). One master Python file execute all programs, including the R master file.
+The code in this replication package constructs the analysis files from data provided by State Audit Courts (TCEs). Two master files execute all programs, one for Python scripts and the other for R scripts.
 
 ### Requirements
 
