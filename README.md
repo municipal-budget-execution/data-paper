@@ -9,8 +9,8 @@ The code in this replication package constructs the analysis files from data pro
 ### Requirements
 
 * Access to Google Cloud Platform and the `basedosdados-dev` project.
-* Python 3 (all packages are as of 2023-09-06)
-* R Studio (all packages are as of 2023-09-06)
+* Python 3.10.9 (all packages are as of 2023-09-06)
+* R Studio 4.3 (all packages are as of 2023-09-06)
 
 #### Runtime Requirements
 
@@ -36,6 +36,7 @@ Figures	| Label																		| File |
 8			| Figure 8: Distribution of share of local suppliers, by population size	| `home_bias_firms_characteristics.ipynb` |
 9			| Figure 9: Distribution of payment delays at municipality-year level	| `fig_and_reg_delay_payment.R`|
 10			| Figure 10: Weighted average payment delay (days)	| `delay_payment_maps.ipynb` |
+11			| Figure 11: Scatter plot - Average payment delay vs. GDP per capita	| `fig_reg_delay_payment.R` |
 A1		| Figure A1: Validation with SICONFI data: commitment phase, by function	| `validation_siconfi_execution.ipynb` |
 A2		| Figure A2: Validation with SICONFI data: verification phase, by function	| `validation_siconfi_execution.ipynb`|
 A3		| Figure A3: Validation with SICONFI data: payment phase, by function	| `validation_siconfi_execution.ipynb` |
