@@ -26,14 +26,14 @@ SP   |https://transparencia.tce.sp.gov.br/conjunto-de-dados |
 
 Each State makes the data available in a different way. Our work consists of creating a data architecture so that the variables have the same name and format. Not all States provide the same information, so there may be missing observations. Example: 
 
-| name               | CE               | MG        | PB   | PE           | PR            | RS             | SP          |   |   |
-|:--------------------:|:-------------------------:|:------------------:|:-------------:|:---------------------:|:----------------------:|:-----------------------:|:--------------------:|---|---|
-| ano                | exercicio_orcamento     | num_anoexercicio | dt_Ano      | ANOREFERENCIA       | nrAnoEmpenho         | ano_operacao          | ano_exercicio      |   |   |
-| mes                | data_referencia_empenho | num_mesexercicio |             |                     | nrMesProcessamento   |                       | mes_referencia     |   |   |
-| data               | data_emissao_empenho    | dat_empenho      | dt_empenho  | DATA                | dtEmpenho            | dt_empenho            | dt_emissao_despesa |   |   |
-| id_municipio       | codigo_municipio        | cod_municipio    |             |                     | cdIBGE               |                       | ds_municipio       |   |   |
-| orgao              | codigo_orgao            | seq_orgao        |             | ID_UNIDADE_GESTORA  | cdOrgao; nmOrgao     | cd_orgao              | ds_orgao           |   |   |
-| id_unidade_gestora | codigo_unidade          | cod_unidade      | cd_ugestora | UNIDADEORCAMENTARIA | cdUnidade; nmUnidade | cd_orgao_orcamentario |                    |   |   |
+| name               | CE               | MG        | PB   | PE           | PR            | RS             | SP          |
+|:--------------------:|:-------------------------:|:------------------:|:-------------:|:---------------------:|:----------------------:|:-----------------------:|:--------------------:|
+| ano                | exercicio_orcamento     | num_anoexercicio | dt_Ano      | ANOREFERENCIA       | nrAnoEmpenho         | ano_operacao          | ano_exercicio      |
+| mes                | data_referencia_empenho | num_mesexercicio |             |                     | nrMesProcessamento   |                       | mes_referencia     |
+| data               | data_emissao_empenho    | dat_empenho      | dt_empenho  | DATA                | dtEmpenho            | dt_empenho            | dt_emissao_despesa |
+| id_municipio       | codigo_municipio        | cod_municipio    |             |                     | cdIBGE               |                       | ds_municipio       |
+| orgao              | codigo_orgao            | seq_orgao        |             | ID_UNIDADE_GESTORA  | cdOrgao; nmOrgao     | cd_orgao              | ds_orgao           |
+| id_unidade_gestora | codigo_unidade          | cod_unidade      | cd_ugestora | UNIDADEORCAMENTARIA | cdUnidade; nmUnidade | cd_orgao_orcamentario |                    |
 
 
 
