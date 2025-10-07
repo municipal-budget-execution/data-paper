@@ -67,7 +67,7 @@
 {
   { # Setting path
     
-    if (Sys.getenv("USERNAME") == "natha") { # RA (World Bank-DIME)
+    if (Sys.getenv("USERNAME") == "natha") { # Author
       
       print("Nathalia has been selected")
       
@@ -95,7 +95,14 @@
       dropbox_dir  <- "/Users/thiagoscott/Dropbox/MiDES-data-paper-replication"
       github_dir   <- "/Users/thiagoscott/Documents/GitHub/data-paper"
       
-    } 
+    } else if (Sys.getenv("USER") == "rdahis") { # Author (Monash University)
+      
+      print("Ricardo (Monash) has been selected")
+      
+      dropbox_dir  <- "/Users/rdahis/Monash Uni Enterprise Dropbox/Ricardo Dahis/Academic/Papers/MiDES-data-paper-replication"
+      github_dir   <- "/Users/rdahis/Monash Uni Enterprise Dropbox/Ricardo Dahis/Academic/Papers/MiDES-data-paper-repository"
+      
+    }
       
   }
  
@@ -135,6 +142,18 @@
                      showProgress = TRUE,
                      encoding = "Latin-1")
   
+  # Merge with home bias data
+  home_bias <- fread(file.path(input, "home_bias.csv"))
+  home_bias = home_bias %>%
+    subset(vencedor == 1)
+  setnames(
+    home_bias,
+    c("municipality", "state", "year", "winner", "same_municipality", "same_state")
+  )
+  data_munic <- merge(data_munic, home_bias, 
+              by = c("municipality", "state", "year"), 
+              all.x = TRUE)
+  
 }
 
 # 3: Run the code ----
@@ -146,6 +165,9 @@
   
   # 3.2: this code generates the histogram of non-competitive tenders
   source(file.path(github_dir, "example_paper.R"))
-
+  
+  # 3.3: this code generates the regressions of local purchases on municipality characteristics and fixed effects
+  source(file.path(github_dir, "home_bias_regressions.R"))
+  
   
 }

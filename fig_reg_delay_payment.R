@@ -200,8 +200,8 @@
     "over_30days" = "\\% Over 30 Days",
     "over_45days" = "\\% Over 45 Days",
     "over_60days" = "\\% Over 60 Days",
-    "log(gdp)" = "Log(GDP)",
-    "log(population)" = "Log(Population)"
+    "log(gdp)" = "ln(GDP)",
+    "log(population)" = "ln(Population)"
   )
   
   # Create tables
@@ -218,17 +218,27 @@
   
   # Deal with outliers 
   cols_to_winsorize <- c("proportion_verification", "proportion_commitment", "proportion_payment")
-  data_munic[, (cols_to_winsorize) := lapply(.SD, DescTools::Winsorize, probs = c(0.05, 0.95), na.rm = TRUE), 
-             .SDcols = cols_to_winsorize]
+  # Winsorize at 5% and 95%
+  for(col in cols_to_winsorize) {
+    q05 <- quantile(data_munic[[col]], 0.05, na.rm = TRUE)
+    q95 <- quantile(data_munic[[col]], 0.95, na.rm = TRUE)
+    data_munic[, (col) := pmax(pmin(get(col), q95), q05)]
+  }
   
   # Define regression models
   reg_models <- list(
-    proportion_commitment ~ log(gdp) + log(population) + procurement_municipality| year,
-    proportion_commitment ~ log(gdp) + log(population) + procurement_municipality| state + year,
-    proportion_verification ~ log(gdp) + log(population) + procurement_municipality| year,
-    proportion_verification ~ log(gdp) + log(population) + procurement_municipality| state + year,
-    proportion_payment ~ log(gdp) + log(population) + procurement_municipality| year,
-    proportion_payment ~ log(gdp) + log(population) + procurement_municipality| state + year
+    proportion_commitment   ~ log(gdp) + log(population) + procurement_municipality,
+    proportion_commitment   ~ log(gdp) + log(population) + procurement_municipality | year,
+    proportion_commitment   ~ log(gdp) + log(population) + procurement_municipality | state + year,
+    proportion_commitment   ~ log(gdp) + log(population) + procurement_municipality | municipality + year,
+    proportion_verification ~ log(gdp) + log(population) + procurement_municipality,
+    proportion_verification ~ log(gdp) + log(population) + procurement_municipality | year,
+    proportion_verification ~ log(gdp) + log(population) + procurement_municipality | state + year,
+    proportion_verification ~ log(gdp) + log(population) + procurement_municipality | municipality + year,
+    proportion_payment      ~ log(gdp) + log(population) + procurement_municipality,
+    proportion_payment      ~ log(gdp) + log(population) + procurement_municipality | year,
+    proportion_payment      ~ log(gdp) + log(population) + procurement_municipality | state + year,
+    proportion_payment      ~ log(gdp) + log(population) + procurement_municipality | municipality + year
   )
   
   # Run regression for each model
@@ -239,8 +249,8 @@
     "proportion_commitment" = "Commitment (p.p)",
     "proportion_verification" = "Verification (p.p)",
     "proportion_payment" = "Payment (p.p)",
-    "log(gdp)" = "Log(GDP)",
-    "log(population)" = "Log Population"
+    "log(gdp)" = "ln(GDP)",
+    "log(population)" = "ln(Population)"
   )
   
   # Create tables
@@ -255,12 +265,15 @@
   )
   
   table_a1 <- c(
-    table_a1[1:13], 
+    table_a1[1:6],
+    " \\cmidrule(lr){2-5} \\cmidrule(lr){6-9} \\cmidrule(lr){10-13} ",
+    table_a1[7:13], 
     "\\\\",
-    "  Year Fixed Effects   & \\checkmark & \\checkmark & \\checkmark & \\checkmark & \\checkmark & \\checkmark \\\\  ",
-    "  State Fixed Effects  & \\xmark  & \\checkmark & \\xmark  & \\checkmark & \\xmark  & \\checkmark \\\\  ",
+    "  Year Fixed Effects          & \\xmark & \\checkmark & \\checkmark & \\checkmark & \\xmark & \\checkmark & \\checkmark & \\checkmark & \\xmark & \\checkmark & \\checkmark & \\checkmark \\\\  ",
+    "  State Fixed Effects         & \\xmark & \\xmark     & \\checkmark & \\xmark     & \\xmark & \\xmark     & \\checkmark & \\xmark     & \\xmark & \\xmark     & \\checkmark & \\xmark     \\\\  ",
+    "  Municipality Fixed Effects  & \\xmark & \\xmark     & \\xmark     & \\checkmark & \\xmark & \\xmark     & \\xmark     & \\checkmark & \\xmark & \\xmark     & \\xmark     & \\checkmark \\\\  ",
     "\\midrule",
-    table_a1[20:length(table_a1)]
+    table_a1[21:length(table_a1)]
   )
   
   pdf_table(table_a1, file_name = file.path(table_output, "reg_deviations.tex"))
