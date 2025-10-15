@@ -23,7 +23,7 @@
   # Generate CDF plot for wavg_delay
   cdf_plot <- ggplot(data_plot, aes(wavg_delay)) +
     # Plot CDF line
-    stat_ecdf(geom = "line", size = 2, color = "#17375E", linewidth = 0.8) +
+    stat_ecdf(geom = "line", size = 2, color = "#17375E", linewidth = 1.2) +
     # Formatting and design details
     scale_x_continuous("Average Payment Delays", breaks = seq(10, 100, by = 10), limits = c(0, 105)) +
     coord_cartesian(expand = FALSE, clip = 'off') +
@@ -45,7 +45,7 @@
   
   # Save the CDF plot
   ggsave(
-    filename = file.path(graph_output, "cdf_sample_wavg_delay.jpeg"),
+    filename = file.path(graph_output, "cdf_sample_wavg_delay_2.jpeg"),
     cdf_plot,
     width    = 14.14,
     height   = 8.51,
@@ -57,7 +57,8 @@
   # Generate histogram plot for wavg_delay
   hist_plot <- ggplot(data_plot, aes(wavg_delay)) +
     # Plot histogram bars
-    geom_histogram(linewidth = 0.8, color = "#17375E", alpha = 1, bins = 100) +
+    geom_histogram(linewidth = 0.8, color = "#0D3446",
+                   fill = "#1A476F", alpha = 1, bins = 100) +
     # Formatting and design details identical to CDF plot
     scale_x_continuous("Average Payment Delays", breaks = seq(10, 100, by = 10), limits = c(0, 105)) +
     coord_cartesian(expand = FALSE, clip = 'off') +
@@ -79,7 +80,7 @@
   
   # Save the histogram plot
   ggsave(
-    filename = file.path(graph_output, "hist_sample_wavg_delay.jpeg"),
+    filename = file.path(graph_output, "hist_sample_wavg_delay_2.jpeg"),
     hist_plot,
     width    = 14.14,
     height   = 8.51,
