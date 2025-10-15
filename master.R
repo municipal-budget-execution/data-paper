@@ -88,12 +88,12 @@
       dropbox_dir  <- ""
       github_dir   <- ""
       
-    } else if (Sys.getenv("USER") == "thiagoscott") { # Author (World Bank-DIME)
+    } else if (Sys.getenv("USER") == "tscot") { # Author (World Bank-DIME)
       
       print("Thiago (WB) has been selected")
       
-      dropbox_dir  <- "/Users/thiagoscott/Dropbox/MiDES-data-paper-replication"
-      github_dir   <- "/Users/thiagoscott/Documents/GitHub/data-paper"
+      dropbox_dir  <- "/Users/tscot/Dropbox/MiDES-data-paper-replication"
+      github_dir   <- "/Users/tscot/Documents/GitHub/data-paper"
       
     } 
       
