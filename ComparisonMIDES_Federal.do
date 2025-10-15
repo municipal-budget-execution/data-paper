@@ -99,3 +99,28 @@ twoway (kdensity log_amt if federal == 1, color(dknavy) lw(thick)) ///
  
 encode sigla_uf, gen(uf)
 gen amt_million = tender_amount/1e6
+
+
+gen waiver = modalidade_group  == 1
+
+preserve
+	keep if inrange(tender_amount, 2600, 32600)
+	egen quantiles = cut(tender_amount), at(2600(1000)32600)
+	gcollapse (mean) waiver, by(quantiles sigla_uf)
+	
+	twoway (connect waiver quantiles if sigla_uf == "Federal", color(dknavy)) (connect waiver quantiles if sigla_uf == "RS", color(dkorange)) ///
+			(connect waiver quantiles if sigla_uf == "MG", color(dkgreen)) (connect waiver quantiles if sigla_uf == "PB", color(gs8)), ///
+			xline(17600)
+restore
+
+preserve
+	keep if inrange(tender_amount, 2600, 42600)
+	egen quantiles = cut(tender_amount), at(2600(500)42600)
+	gcollapse (mean) waiver, by(quantiles federal)
+	
+	twoway (connect waiver quantiles if federal == 1, color(dknavy) lw(medthick)) ///
+			(connect waiver quantiles if federal == 0, color(dkorange)lw(medthick)), ///
+			xline(17600 33000) ylab(0(.2)1) xlab(0 10000 17600 20000 30000, nogrid labsize(small)) ytitle("Share of Bid Waivers") ///
+			xtitle("Estimated tender value (R$)") legend(off) ///
+			text(.84 5000 "Federal", color(dknavy)) text(.56 5000 "Municipal (MiDES)", color(dkorange))
+restore
