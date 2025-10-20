@@ -15,12 +15,18 @@ library(stringr)
 library(haven)
 library(janitor)
 
-data_fed = fread("/Users/tscot/Dropbox/WBER_RR/Data/compare_Federal/202107_Licitacoes/202107_ItemLicitação.csv",
-                 encoding = 'Latin-1')
+set.seed(12345)
 
-data_fed = data_fed %>% clean_names()
+in_dir  <- "/Users/tscot/Library/CloudStorage/OneDrive-WBG/Transparencia_Compras"
+
+# data_fed = fread("/Users/tscot/Dropbox/WBER_RR/Data/compare_Federal/202107_Licitacoes/202107_ItemLicitação.csv",
+#                  encoding = 'Latin-1')
+data_fed = readRDS(paste0(in_dir, '/licitacoes_items_2021.rds')) %>% setDT()
+
+# data_fed = data_fed %>% clean_names()
 
 data_fed = data_fed %>% 
+  slice_sample(prop = .1) %>% 
   mutate(descricao = str_replace_all(descricao, "ã", "a")) %>% 
   mutate(descricao = str_replace_all(descricao, "ç", "c")) %>% 
   mutate(tender_objective = str_to_upper(descricao)) %>% 
@@ -76,9 +82,7 @@ corpus = corpus %>% tm_map(stripWhitespace) %>%
                         'secretaria', 'atend', 'futura', 'eventu', 'empresa', 'municipio', 'uso'))
 
 
-png('/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures/WordCloud_federal_services.png',
-    width     = 552,
-    height    = 366)
+png('/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures/WordCloud_federal_services.png')
 wordcloud(corpus
           , max.words= 30   # Set top n words
           , random.order=FALSE # Words in decreasing freq
