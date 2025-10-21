@@ -150,9 +150,20 @@
     home_bias,
     c("municipality", "state", "year", "winner", "same_municipality", "same_state")
   )
-  data_munic <- merge(data_munic, home_bias, 
+  home_bias <- merge(data_munic, home_bias, 
               by = c("municipality", "state", "year"), 
               all.x = TRUE)
+  
+  home_bias.municipality_year <- fread(file.path(input, "home_bias_municipality_year.csv"))
+  home_bias.municipality_year = home_bias.municipality_year %>%
+    subset(vencedor == 1)
+  setnames(
+    home_bias.municipality_year,
+    c("municipality", "state", "year", "winner", "discretionary", "same_municipality", "same_state")
+  )
+  home_bias.municipality_year <- merge(data_munic, home_bias.municipality_year, 
+                      by = c("municipality", "state", "year"), 
+                      all.x = TRUE)
   
 }
 
@@ -160,7 +171,7 @@
 
 {
   
-  # 3.1: this code generates CDFs and Histogram of average delay
+  # 3.1: this code generates CDFs and Histogram of average payment speed
   source(file.path(github_dir, "fig_reg_delay_payment.R"))
   
   # 3.2: this code generates the histogram of non-competitive tenders
