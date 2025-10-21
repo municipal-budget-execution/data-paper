@@ -7,11 +7,11 @@
 {
   
   # Convert fractions to percentages for all variables starting with 'over_'
-  data_munic = data_munic[, (grep("^over_", names(data_munic))) := lapply(.SD, function(x) x * 100), 
-                          .SDcols = grep("^over_", names(data_munic))]
+  home_bias = home_bias[, (grep("^over_", names(home_bias))) := lapply(.SD, function(x) x * 100), 
+                          .SDcols = grep("^over_", names(home_bias))]
   
   # We exclude it cause we don't have procurement data for this state
-  data_plot = data_munic[state != "PE",][year %in% seq(2014, 2020),]
+  data_plot = home_bias[state != "PE",][year %in% seq(2014, 2020),]
   
 }
 
@@ -25,7 +25,7 @@
     # Plot CDF line
     stat_ecdf(geom = "line", size = 2, color = "#17375E", linewidth = 1.2) +
     # Formatting and design details
-    scale_x_continuous("Average Payment Delays", breaks = seq(10, 100, by = 10), limits = c(0, 105)) +
+    scale_x_continuous("Average Payment Speed (days)", breaks = seq(10, 100, by = 10), limits = c(0, 105)) +
     coord_cartesian(expand = FALSE, clip = 'off') +
     scale_y_continuous("", limits = c(0, 1.1), breaks = seq(0.2, 1, by = .2)) +
     set_theme(axis_line_x = element_blank(),
@@ -60,7 +60,7 @@
     geom_histogram(linewidth = 0.8, color = "#0D3446",
                    fill = "#1A476F", alpha = 1, bins = 100) +
     # Formatting and design details identical to CDF plot
-    scale_x_continuous("Average Payment Delays", breaks = seq(10, 100, by = 10), limits = c(0, 105)) +
+    scale_x_continuous("Average Payment Speed (days)", breaks = seq(10, 100, by = 10), limits = c(0, 105)) +
     coord_cartesian(expand = FALSE, clip = 'off') +
     scale_y_continuous("") +
     set_theme(axis_line_x = element_blank(),
@@ -163,13 +163,21 @@
   # Extract and customize the ggplot object
   binreg_plot <- binreg_object[["bins_plot"]] + 
     scale_x_continuous("Log (GDP per capita)") +
-    ggtitle("Average Payment Delay") +
+    ggtitle("Average Payment Speed (days)") +
     coord_cartesian(expand = FALSE, clip = 'off') +
     scale_y_continuous("", limits = c(14, 24), breaks = seq(15, 23, by = 1)) +
     set_theme(axis_line_x = element_line(), axis_line_y = element_line())
   
   # Save the plot
-  ggsave(filename = file.path(graph_output, "scatter_plot.jpeg"), binreg_plot, width = 14.14, height = 8.51, dpi = 400, units = "in", device = 'jpeg')
+  ggsave(
+    filename = file.path(graph_output, "scatter_plot.jpeg"),
+    binreg_plot,
+    width = 14.14,
+    height = 8.51,
+    dpi = 400,
+    units = "in",
+    device = 'jpeg'
+  )
   
 }
 
@@ -191,13 +199,13 @@
     reg_models[[i]] <- as.formula(paste0(outcome, " ~ log(gdp) + log(population) | state + year"))
     
     for (reg in seq(i - 1, i)) {
-      reg_results[[reg]] <- fixest::feols(reg_models[[reg]], data = data_munic[state != "PE"][year %in% seq(2014, 2020),])
+      reg_results[[reg]] <- fixest::feols(reg_models[[reg]], data = home_bias[state != "PE"][year %in% seq(2014, 2020),])
     }
   }
   
   # Dictionary for variable names
   dict <- c(
-    "wavg_delay" = "Average Payment Delay",
+    "wavg_delay" = "Average Payment Speed (days)",
     "over_30days" = "\\% Over 30 Days",
     "over_45days" = "\\% Over 45 Days",
     "over_60days" = "\\% Over 60 Days",
@@ -221,9 +229,9 @@
   cols_to_winsorize <- c("proportion_verification", "proportion_commitment", "proportion_payment")
   # Winsorize at 5% and 95%
   for(col in cols_to_winsorize) {
-    q05 <- quantile(data_munic[[col]], 0.05, na.rm = TRUE)
-    q95 <- quantile(data_munic[[col]], 0.95, na.rm = TRUE)
-    data_munic[, (col) := pmax(pmin(get(col), q95), q05)]
+    q05 <- quantile(home_bias[[col]], 0.05, na.rm = TRUE)
+    q95 <- quantile(home_bias[[col]], 0.95, na.rm = TRUE)
+    home_bias[, (col) := pmax(pmin(get(col), q95), q05)]
   }
   
   # Define regression models
@@ -243,7 +251,7 @@
   )
   
   # Run regression for each model
-  reg_results <- lapply(reg_models, function(model) fixest::feols(model, data = data_munic))
+  reg_results <- lapply(reg_models, function(model) fixest::feols(model, data = home_bias))
   
   # Variable names and descriptions
   dict <- c(
