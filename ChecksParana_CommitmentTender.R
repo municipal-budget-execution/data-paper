@@ -12,21 +12,21 @@ path_figures = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and F
 
 #Set user's BigQuery billing ID
  set_billing_id("projetobd-302617")
-# 
+#
 query = "WITH empenho AS (
-  SELECT 
+  SELECT
   e.sigla_uf
   ,e.id_municipio
   ,e.id_empenho
   ,e.valor_final
   ,e.valor_inicial
-  ,e.ano 
+  ,e.ano
   FROM `basedosdados.world_wb_mides.empenho` e
   WHERE e.sigla_uf = 'PR'
 )
 
 , relacionamento AS (
-  SELECT 
+  SELECT
   r.sigla_uf
   ,r.id_municipio
   ,r.id_empenho
@@ -36,14 +36,14 @@ query = "WITH empenho AS (
   ,e.valor_inicial
   ,e.ano AS ano_empenho
   FROM `basedosdados-dev.world_wb_mides.relacionamentos`  r
-    INNER JOIN empenho e 
-      ON r.sigla_uf = e.sigla_uf 
-      AND e.id_municipio = r.id_municipio 
-      AND r.id_empenho =  e.id_empenho 
+    INNER JOIN empenho e
+      ON r.sigla_uf = e.sigla_uf
+      AND e.id_municipio = r.id_municipio
+      AND r.id_empenho =  e.id_empenho
 )
 
 , agg AS (
-  SELECT 
+  SELECT
     sigla_uf
     ,id_municipio
     ,id_licitacao
@@ -53,92 +53,149 @@ query = "WITH empenho AS (
     ,MIN(ano_empenho) AS min_ano
     ,MAX(ano_empenho) AS max_ano
     ,COUNT(id_empenho) AS number_empenho
-  FROM relacionamento 
+  FROM relacionamento
     GROUP BY sigla_uf, id_municipio, id_licitacao, ano_rel
 )
 
-SELECT 
+SELECT
+  l.ano, l.sigla_uf, l.id_municipio, l.modalidade, l.valor, l.valor_corrigido, l.valor_orcamento, l.situacao, l.natureza_processo,
   a.*,
-  l.ano, l.sigla_uf, l.id_municipio, l.modalidade, l.valor, l.valor_corrigido, l.valor_orcamento, l.situacao
 FROM `basedosdados.world_wb_mides.licitacao` l
-LEFT JOIN agg a 
+LEFT JOIN agg a
   ON l.ano = a.ano_rel
   AND l.sigla_uf = a.sigla_uf
   AND l.id_municipio = a.id_municipio
   AND l.id_licitacao = a.id_licitacao
-WHERE l.sigla_uf = 'PR'
+WHERE l.sigla_uf = 'PR' AND (situacao = '1' OR situacao IS NULL)
 "
 
 items_query = read_sql(query)
-fwrite(items_query,  '/Users/tscot/Dropbox/WBER_RR/Data/Compare_Siconfi_Tender/PR_empenho_licitacao')
+fwrite(items_query,  paste0(path_file, 'PR_empenho_licitacao.csv'))
 
-data = fread('/Users/tscot/Dropbox/WBER_RR/Data/Compare_Siconfi_Tender/PR_empenho_licitacao')
+data = fread(paste0(path_file, 'PR_empenho_licitacao.csv'))
 
-data[valor_corrigido >= 0 & agg_valor_final >= 0, deviation := 100*(valor_corrigido/agg_valor_final - 1)]
+data[valor_corrigido >= 0 & agg_valor_final >= 0, deviation := 100*(valor_corrigido/agg_valor_inicial - 1)]
 
-##Deviations at licitacao level
-data[deviation >= -100] %>% mutate(ratio_lic = pmin(deviation, 200)) %>% ggplot() + 
+data = data %>% 
+  filter(ano_rel >= 2014 & ano_rel <= 2020) %>% 
+  mutate(ratio_lic = pmin(deviation, 300),
+         modality_group = case_when(
+                         modalidade %in% c(4,5,6) ~ "Auction",
+                         modalidade == 8 ~ "Waiver",
+                         modalidade == 10 ~ "Direct Contracting", 
+                         .default = "Other"),
+         nature_process = case_when(
+           natureza_processo %in% c(2,6) ~ "FA",
+           .default = "Other")
+         )
+
+########Deviations at licitacao level #####
+
+data[deviation >= -100] %>% ggplot() + 
   geom_histogram(aes(x = ratio_lic,
-                     y = stat(width*density)), binwidth = 5, 
+                     y = stat(width*density)), binwidth = 10, 
                  color = "#0D3446",
-                 fill = "#1A476F", alpha = .5) + 
-  theme_classic() + 
-  geom_vline(xintercept = 0) +
-  labs(
-    x = "Deviation Tenders - Procurement Commitments",
-    y = "Share"
-  ) 
-
-##Deviations at licitacao level
-data[deviation >= -100] %>% mutate(ratio_lic = pmin(deviation, 200),
-                                   modality_group = case_when(
-                                     modalidade %in% c(4,5,6) ~ "Auction",
-                                     modalidade == 8 ~ "Waiver",
-                                     modalidade == 10 ~ "Direct Contraction", 
-                                     .default = "Other"
-                                   )) %>% 
-  ggplot() + 
-  geom_histogram(aes(x = ratio_lic,
-                     y = stat(width*density)), binwidth = 5, 
-                 color = "#0D3446",
-                 fill = "#1A476F", alpha = .5) + 
-  geom_vline(xintercept = median_all, color = 'red', linetype = 'dashed', linewidth = 1) + 
-  theme_classic() + 
-  geom_vline(xintercept = 0) +
+                 fill = "#1A476F", alpha = .5) +
+  geom_vline(xintercept = 0, , color = 'red', linetype = 'dashed', linewidth = .3) +
   labs(
     x = "Deviation Tenders - Procurement Commitments",
     y = "Share"
   ) +
-  facet_wrap(~ modality_group)
+  ylim(0, 0.8) +
+  theme_classic(base_size = 14) +   # increase base font size
+  theme(
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 13),
+    legend.position = "none"        # remove legend for size
+  )
+ggsave(filename = paste0(path_figures, '/histogram_deviations_parana_tender.png'))
 
+#stat
+data[, .(share_20 = mean(abs(deviation) <= 10, na.rm = T))]
 
-data[deviation >= -100 & deviation <= 200] %>% 
+########Deviations at licitacao level - By modality #####
+data[deviation >= -100] %>% 
   ggplot() + 
-  geom_smooth(aes(x = deviation, y = as.numeric((modalidade %in% c(4,5,6)))), color = 'red') + 
-  geom_smooth(aes(x = deviation, y = as.numeric((modalidade == 8))), color = 'blue')
-
-
-
-a = data[! is.na(ano_rel)] 
-b = data
-
-new = b %>% 
-  .[,.(sum_lic = sum(valor_corrigido, na.rm = T),
-       sum_com = sum(agg_valor_final, na.rm = T)),
-    by = .(id_municipio, ano)] %>% 
-  .[,deviation := 100*(sum_lic/sum_com - 1)]
-
-new[deviation >= -200 & deviation <= 200] %>% 
-  mutate(ratio_lic = pmin(deviation, 200)) %>% ggplot() + 
   geom_histogram(aes(x = ratio_lic,
-                     y = stat(width*density)), binwidth = 5, 
+                     y = stat(width*density)), binwidth = 10, 
                  color = "#0D3446",
                  fill = "#1A476F", alpha = .5) + 
-  geom_vline(xintercept = median_all, color = 'red', linetype = 'dashed', linewidth = 1) + 
-  theme_classic() + 
-  geom_vline(xintercept = 0) +
+  geom_vline(xintercept = 0, color = 'red', linetype = 'dashed', linewidth = .3) +
   labs(
     x = "Deviation Tenders - Procurement Commitments",
     y = "Share"
-  ) 
+  ) +
+  ylim(0, 0.8) +
+  theme_classic(base_size = 14) +   # increase base font size
+  theme(
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 13),
+    strip.text = element_text(size = 9, face = "bold"),
+    strip.background = element_blank()
+  ) +
+  facet_wrap(~ modality_group)
+ggsave(filename = paste0(path_figures, '/histogram_deviations_parana_tender_modality.png'))
 
+
+########Deviations at licitacao level - By nature #####
+data[deviation >= -100] %>% 
+  ggplot() + 
+  geom_histogram(aes(x = ratio_lic,
+                     y = stat(width*density)), binwidth = 10, 
+                 color = "#0D3446",
+                 fill = "#1A476F", alpha = .5) + 
+  geom_vline(xintercept = 0, color = 'red', linetype = 'dashed', linewidth = .3) +
+  labs(
+    x = "Deviation Tenders - Procurement Commitments",
+    y = "Share"
+  ) +
+  ylim(0, 0.8) +
+  theme_classic(base_size = 14) +   # increase base font size
+  theme(
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 13),
+    strip.text = element_text(size = 9, face = "bold"),
+    strip.background = element_blank()
+  ) +
+  facet_wrap(~ nature_process)
+ggsave(filename = paste0(path_figures, '/histogram_deviations_parana_tender_modality.png'))
+
+
+#Stats by modality
+data[! is.na(agg_valor_final), 
+     .(share_multiyear = mean((min_ano != max_ano), na.rm = T),
+      avg_commits = mean(number_empenho),
+      share_FA = mean(nature_process == "FA")), 
+    by = .(modality_group)]
+#52% of auctions have multiyear commitment vs. 12% of waivers
+#Avg number of commitments fr auctions is 34 v. 4 for waivers
+
+# data[deviation >= -100 & deviation <= 200] %>% 
+#   ggplot() + 
+#   geom_smooth(aes(x = deviation, y = as.numeric((modalidade %in% c(4,5,6)))), color = 'red') + 
+#   geom_smooth(aes(x = deviation, y = as.numeric((modalidade == 8))), color = 'blue')
+
+
+munic_agg = data[,.(sum_lic = sum(valor_corrigido, na.rm = T),
+                    sum_com = sum(agg_valor_final, na.rm = T)),
+                 by = .(id_municipio, ano)] %>%
+  .[,deviation := 100*(sum_lic/sum_com - 1)]
+
+munic_agg %>% 
+  mutate(ratio_lic = pmin(deviation, 300)) %>% ggplot() + 
+  geom_histogram(aes(x = ratio_lic,
+                     y = stat(width*density)), binwidth = 10, 
+                 color = "#0D3446",
+                 fill = "#1A476F", alpha = .5) + 
+  geom_vline(xintercept = 0, color = 'red', linetype = 'dashed', linewidth = .3) +
+  labs(
+    x = "Deviation Tenders - Procurement Commitments",
+    y = "Share"
+  ) +
+  theme_classic(base_size = 14) +   # increase base font size
+  theme(
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 13),
+    legend.position = "none"        # remove legend for size
+  )
+ggsave(filename = paste0(path_figures, '/histogram_deviations_parana_tender_munic.png'))
