@@ -1,8 +1,8 @@
 SELECT * FROM `basedosdados.world_wb_mides.empenho`
 WHERE id_empenho IN ('67007547', '78283291', '74557531', '78283087')
 
-#SELECT * FROM `basedosdados-dev.world_wb_mides.relacionamentos`
-#WHERE id_licitacao = '1390151'
+SELECT * FROM `basedosdados-dev.world_wb_mides.relacionamentos`
+WHERE id_licitacao = '1390151'
 
 SELECT * FROM `basedosdados.world_wb_mides.licitacao`
 WHERE sigla_uf = "PR" AND id_municipio = '4127908' AND id_licitacao = '1390151'
