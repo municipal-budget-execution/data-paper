@@ -2,10 +2,13 @@
 library(data.table)
 library(janitor)
 library(dplyr)
+library(data.table)
 
 # ---- Settings ----
-in_dir  <- "/Users/tscot/Library/CloudStorage/OneDrive-WBG/Transparencia_Compras"     # <- change to your folder
-out_rds <- "licitacoes_2021.rds"   # output file name (can include a full path)
+in_dir  <- "/Users/tscot/Dropbox/MiDES-data-paper-replication/Data/Raw/Transparency_Federal_2021"     # <- change to your folder
+out_dir <- "/Users/tscot/Dropbox/MiDES-data-paper-replication/Data/Intermediate/Transparency_Federal_2021"
+
+  # output file name (can include a full path)
 
 ######## LICITACAO #############
 # ---- List the files (2021MM_*.csv for MM=01..12) ----
@@ -33,12 +36,12 @@ DT_list <- lapply(files, function(f) {
 DT <- rbindlist(DT_list, use.names = TRUE, fill = TRUE)
 
 # ---- Save as RDS ----
-saveRDS(DT, file = file.path(in_dir, out_rds))
-
+saveRDS(DT, file = file.path(out_dir, "licitacoes_2021.rds"))
+fwrite(DT, file = file.path(out_dir, "licitacoes_2021.csv"))
 
 
 ######## ITEM #############
-out_rds_items <- "licitacoes_items_2021.rds"   # output file name (can include a full path)
+
 # ---- List the files (2021MM_*.csv for MM=01..12) ----
 files <- list.files(
   path = in_dir,
@@ -62,4 +65,5 @@ DT_list <- lapply(files, function(f) {
 DT <- rbindlist(DT_list, use.names = TRUE, fill = TRUE)
 
 # ---- Save as RDS ----
-saveRDS(DT, file = file.path(in_dir, out_rds_items))
+saveRDS(DT, file = file.path(out_dir, "licitacoes_items_2021.rds"))
+fwrite(DT, file = file.path(out_dir, "licitacoes_items_2021.csv"))
