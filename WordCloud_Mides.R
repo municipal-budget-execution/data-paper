@@ -20,23 +20,22 @@ set.seed(12345)
 
 in_dir  <- "/Users/tscot/Dropbox/MiDES-data-paper-replication/Data"
 figures = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures'
-# data_fed = fread("/Users/tscot/Dropbox/WBER_RR/Data/compare_Federal/202107_Licitacoes/202107_ItemLicitação.csv",
-#                  encoding = 'Latin-1')
+
 data_mides = fread(paste0(in_dir, '/Raw/mides_2021_items.csv')) 
 
 data_mides = data_mides %>% 
   slice_sample(prop = .03) %>% 
-  mutate(descricao = str_replace_all(descricao, "ã", "a")) %>% 
-  mutate(descricao = str_replace_all(descricao, "ç", "c")) %>% 
   mutate(tender_objective = str_to_upper(descricao)) %>% 
+  mutate(tender_objective = str_replace_all(tender_objective, "Ã", "A")) %>% 
+  mutate(tender_objective = str_replace_all(tender_objective, "Ç", "C")) %>% 
   mutate(service = str_detect(tender_objective, 
                               "SERVIÇO|SERVICO|ALUGUEL|ALUGUÉL|ALUGUEL|MANUTENÇÃO|MANUTENCAO|CONSULTORIA|CONTRATAÇÃO|CONTRATACAO|ASSESSORIA|TREINAMENTO|CAPACITAÇÃO|CAPACITACAO|TRANSPORTE|FRETE|LOCAÇÃO|LOCACAO|LICENCIAMENTO|SUPORTE|INSTALAÇÃO|INSTALACAO|LIMPEZA|SEGURANÇA|SEGURANCA|VIGILÂNCIA|VIGILANCIA|MONITORAMENTO|DESENVOLVIMENTO|PROGRAMACAO|PROGR|SHOW|OBRA")) %>% 
   setDT()
 
 text = data_mides[service == F]$tender_objective %>% paste(collapse = " ")
-writeLines(text, con = paste0(in_dir,'/Intermediate/WordCloud/mides_goods/mides_goods_goods.txt'))
+writeLines(text, con = paste0(in_dir,'/Intermediate/WordCloud/mides_goods/mides_goods.txt'))
 text = data_mides[service == T]$tender_objective %>% paste(collapse = " ")
-writeLines(text, con = paste0(in_dir,'/Intermediate/WordCloud/mides_services/mides_services_goods.txt'))
+writeLines(text, con = paste0(in_dir,'/Intermediate/WordCloud/mides_services/mides_services.txt'))
 
 ####Goods Mides
 corpus = Corpus(DirSource(paste0(in_dir,'/Intermediate/WordCloud/mides_goods')))
