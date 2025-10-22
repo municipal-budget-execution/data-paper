@@ -30,7 +30,7 @@ DT_list <- lapply(files, function(f) {
   # fread auto-detects delimiter; encoding set to UTF-8 (adjust if needed)
   fread(f, encoding = "Latin-1", na.strings = c("", "NA", "NULL")) %>% 
     clean_names() %>% 
-    .[, c('numero_licitacao', 'codigo_ug', 'codigo_modalidade_compra', 'uf', 'municipio', 'valor_licitacao')]
+    .[, c('data_resultado_compra','numero_licitacao', 'codigo_ug', 'codigo_modalidade_compra', 'uf', 'municipio', 'valor_licitacao', 'objeto')]
 })
 
 DT <- rbindlist(DT_list, use.names = TRUE, fill = TRUE)
