@@ -7,11 +7,11 @@
 {
   
   # Convert fractions to percentages for all variables starting with 'over_'
-  home_bias = home_bias[, (grep("^over_", names(home_bias))) := lapply(.SD, function(x) x * 100), 
-                          .SDcols = grep("^over_", names(home_bias))]
+  df = df[, (grep("^over_", names(df))) := lapply(.SD, function(x) x * 100), 
+                          .SDcols = grep("^over_", names(df))]
   
   # We exclude it cause we don't have procurement data for this state
-  data_plot = home_bias[state != "PE",][year %in% seq(2014, 2020),]
+  data_plot = df[state != "PE",][year %in% seq(2014, 2020),]
   
 }
 
@@ -199,7 +199,7 @@
     reg_models[[i]] <- as.formula(paste0(outcome, " ~ log(gdp) + log(population) | state + year"))
     
     for (reg in seq(i - 1, i)) {
-      reg_results[[reg]] <- fixest::feols(reg_models[[reg]], data = home_bias[state != "PE"][year %in% seq(2014, 2020),])
+      reg_results[[reg]] <- fixest::feols(reg_models[[reg]], data = df[state != "PE"][year %in% seq(2014, 2020),])
     }
   }
   
@@ -229,9 +229,9 @@
   cols_to_winsorize <- c("proportion_verification", "proportion_commitment", "proportion_payment")
   # Winsorize at 5% and 95%
   for(col in cols_to_winsorize) {
-    q05 <- quantile(home_bias[[col]], 0.05, na.rm = TRUE)
-    q95 <- quantile(home_bias[[col]], 0.95, na.rm = TRUE)
-    home_bias[, (col) := pmax(pmin(get(col), q95), q05)]
+    q05 <- quantile(df[[col]], 0.05, na.rm = TRUE)
+    q95 <- quantile(df[[col]], 0.95, na.rm = TRUE)
+    df[, (col) := pmax(pmin(get(col), q95), q05)]
   }
   
   # Define regression models
@@ -251,7 +251,7 @@
   )
   
   # Run regression for each model
-  reg_results <- lapply(reg_models, function(model) fixest::feols(model, data = home_bias))
+  reg_results <- lapply(reg_models, function(model) fixest::feols(model, data = df))
   
   # Variable names and descriptions
   dict <- c(

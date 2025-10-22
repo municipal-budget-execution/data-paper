@@ -10,7 +10,7 @@
   )
   
   # Run regression for each model
-  reg_results <- lapply(reg_models, function(model) fixest::feols(model, data = home_bias.municipality_year))
+  reg_results <- lapply(reg_models, function(model) fixest::feols(model, data = df.municipality_year))
   
   # Variable names and descriptions
   dict <- c(

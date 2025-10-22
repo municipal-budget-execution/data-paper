@@ -142,6 +142,14 @@
                      showProgress = TRUE,
                      encoding = "Latin-1")
   
+  budget_data <- fread(file.path(input, "siconfi_compras.csv")) %>%
+    mutate(
+      proportion_procurement = total_compras_empenho / total_empenho,
+      year = ano,
+      municipality = id_municipio
+    ) %>%
+    select(municipality, year, proportion_procurement)
+  
   # Merge with home bias data
   home_bias <- fread(file.path(input, "home_bias.csv"))
   home_bias = home_bias %>%
@@ -150,8 +158,11 @@
     home_bias,
     c("municipality", "state", "year", "winner", "same_municipality", "same_state")
   )
-  home_bias <- merge(data_munic, home_bias, 
+  df <- merge(data_munic, home_bias, 
               by = c("municipality", "state", "year"), 
+              all.x = TRUE)
+  df <- merge(df, budget_data, 
+              by = c("municipality", "year"), 
               all.x = TRUE)
   
   home_bias.municipality_year <- fread(file.path(input, "home_bias_municipality_year.csv"))
@@ -161,9 +172,15 @@
     home_bias.municipality_year,
     c("municipality", "state", "year", "winner", "discretionary", "same_municipality", "same_state")
   )
-  home_bias.municipality_year <- merge(data_munic, home_bias.municipality_year, 
+  df.municipality_year <- merge(data_munic, home_bias.municipality_year, 
                       by = c("municipality", "state", "year"), 
                       all.x = TRUE)
+  df.municipality_year <- merge(df.municipality_year, budget_data, 
+              by = c("municipality", "year"), 
+              all.x = TRUE)
+  
+  
+  
   
 }
 
