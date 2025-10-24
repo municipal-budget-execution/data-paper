@@ -78,6 +78,23 @@ twoway (kdensity log_amt if federal == 1, color(dknavy) lw(thick)) ///
 	 text(0.15 15 "Municipal (MiDES)", size(vsmall) color(dkorange))
 graph export "${path_figures}/distribution_tender_federal.png", replace as(png)	
 
+
+**Only states for which we also have items
+loc thr = log(17600)
+twoway (kdensity log_amt if federal == 1, color(dknavy) lw(thick)) ///
+		(kdensity log_amt  if (federal == 0 & inlist(sigla_uf, "CE", "MG", "RS")), color(dkorange) lw(thick)) ///
+	(kdensity log_amt if sigla_uf == "CE", color(gs8%20) lp(dash)) ///
+ (kdensity log_amt if sigla_uf == "MG", color(gs8%20) lp(dash)) ///
+    (kdensity log_amt if sigla_uf == "PR", color(gs8%20)lp(dash)) ///
+	 (kdensity log_amt if sigla_uf == "RS", color(gs8%20)lp(dash)) if tender_amount >= 100, ///
+	 legend(off) xline(`thr', lc(red) lw(thin)) xlab(, nogrid) ylab(, nogrid) ///
+	 ytitle("Density") xtitle("Log(Tender Value)") ///
+	 text(.22 7 "Federal (Transparency Portal)", size(vsmall) color(dknavy)) ///
+	 text(0.15 15 "Municipal (MiDES)", size(vsmall) color(dkorange))
+graph export "${path_figures}/distribution_tender_federal_itemsonly.png", replace as(png)	
+
+
+
 tab sigla_uf modalidade_group [w=round(tender_amount)] if tender_amount < 100e9 , nof row
 tab sigla_uf modalidade_group , nof row
 
@@ -124,7 +141,7 @@ restore
 
 
 import delim "$path_data/Intermediate/mides_2021_items.csv", clear
-
+drop if sigla_uf == "PR"
 gen federal = 0
 
 preserve
@@ -132,8 +149,6 @@ preserve
 
 	keep numero_licitacao codigo_ug valor_item
 	gen federal = 1
-	rename valor_item valor_total
-	
 
 	tostring numero_licitacao, gen(num_lic_str)
 	tostring codigo_ug, gen(ug_str)
@@ -147,21 +162,18 @@ restore
 append using "`federal'"
 
 
-gen log_amt = log(valor_total)
+gen log_amt = log(valor_item)
 
 preserve
 	sample 20 
-	 summ valor_total if federal == 0, d
-	 summ valor_total if federal == 1, d
+	 summ valor_item if federal == 0, d
+	 summ valor_item if federal == 1, d
 
 	twoway (kdensity log_amt if federal == 1, color(dknavy) lw(thick)) ///
 			(kdensity log_amt  if federal == 0, color(dkorange) lw(thick)) ///
 		(kdensity log_amt if sigla_uf == "CE", color(gs8%20) lp(dash)) ///
 	 (kdensity log_amt if sigla_uf == "MG", color(gs8%20) lp(dash)) ///
-	  (kdensity log_amt if sigla_uf == "PB", color(gs8%20)lp(dash)) ///
-	   (kdensity log_amt if sigla_uf == "PE", color(gs8%20)lp(dash)) ///
-		(kdensity log_amt if sigla_uf == "PR", color(gs8%20)lp(dash)) ///
-		 (kdensity log_amt if sigla_uf == "RS", color(gs8%20)lp(dash)) if valor_total >= 10, ///
+		 (kdensity log_amt if sigla_uf == "RS", color(gs8%20)lp(dash)) if valor_item >= 10, ///
 		 legend(off) xlab(, nogrid) ylab(, nogrid) ///
 		 ytitle("Density") xtitle("Log(Tender Value)") ///
 		 text(.18 11 "Federal (Transparency Portal)", size(vsmall) color(dknavy)) ///
