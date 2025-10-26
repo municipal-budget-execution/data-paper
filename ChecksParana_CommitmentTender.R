@@ -7,12 +7,12 @@ library(data.table)
 library(tibble)
 library(patchwork)
 
-path_file = '/Users/tscot/Dropbox/WBER_RR/Data/Compare_Siconfi_Tender'
+path_file = '/Users/tscot/Dropbox/MiDES-data-paper-replication/Data/Intermediate'
 path_figures = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures'
 
 #Set user's BigQuery billing ID
  set_billing_id("projetobd-302617")
-#
+
 query = "WITH empenho AS (
   SELECT
   e.sigla_uf
@@ -70,11 +70,12 @@ WHERE l.sigla_uf = 'PR' AND (situacao = '1' OR situacao IS NULL)
 "
 
 items_query = read_sql(query)
-fwrite(items_query,  paste0(path_file, 'PR_empenho_licitacao.csv'))
+fwrite(items_query,  paste0(path_file, '/PR_empenho_licitacao.csv'))
 
-data = fread(paste0(path_file, 'PR_empenho_licitacao.csv'))
+data = fread(paste0(path_file, '/PR_empenho_licitacao.csv'))
 
-data[valor_corrigido >= 0 & agg_valor_final >= 0, deviation := 100*(valor_corrigido/agg_valor_inicial - 1)]
+data[valor_corrigido >= 0 & agg_valor_final >= 0, 
+     deviation := 100*(valor_corrigido/agg_valor_inicial - 1)]
 
 data = data %>% 
   filter(ano_rel >= 2014 & ano_rel <= 2020) %>% 
@@ -115,6 +116,8 @@ data[, .(share_20 = mean(abs(deviation) <= 10, na.rm = T))]
 
 ########Deviations at licitacao level - By modality #####
 data[deviation >= -100] %>% 
+  mutate(modality_group = factor(modality_group,
+                levels = c("Auction", "Other","Direct Contracting", "Waiver"))) %>% 
   ggplot() + 
   geom_histogram(aes(x = ratio_lic,
                      y = stat(width*density)), binwidth = 10, 
@@ -136,29 +139,6 @@ data[deviation >= -100] %>%
   facet_wrap(~ modality_group)
 ggsave(filename = paste0(path_figures, '/histogram_deviations_parana_tender_modality.png'))
 
-
-########Deviations at licitacao level - By nature #####
-data[deviation >= -100] %>% 
-  ggplot() + 
-  geom_histogram(aes(x = ratio_lic,
-                     y = stat(width*density)), binwidth = 10, 
-                 color = "#0D3446",
-                 fill = "#1A476F", alpha = .5) + 
-  geom_vline(xintercept = 0, color = 'red', linetype = 'dashed', linewidth = .3) +
-  labs(
-    x = "Deviation Tenders - Procurement Commitments",
-    y = "Share"
-  ) +
-  ylim(0, 0.8) +
-  theme_classic(base_size = 14) +   # increase base font size
-  theme(
-    axis.title = element_text(size = 14, face = "bold"),
-    axis.text = element_text(size = 13),
-    strip.text = element_text(size = 9, face = "bold"),
-    strip.background = element_blank()
-  ) +
-  facet_wrap(~ nature_process)
-ggsave(filename = paste0(path_figures, '/histogram_deviations_parana_tender_modality.png'))
 
 
 #Stats by modality
