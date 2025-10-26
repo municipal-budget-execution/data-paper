@@ -12,6 +12,17 @@ if "`c(username)'" == "" {
 }
 
 
+**Putting together federal expenditures from individual monthly datasets
+foreach x in 01 02 03 04 05 06 07 08 09 10 11 12 {
+import delimited "${path_data}/2018`x'_Despesas.csv", clear 
+destring val*, dpcomma replace
+keep códigofunção nomefunção nomeelementodedespesa códigoelementodedespesa val*
+rename códigoelementodedespesa code_elemento
+append using "${path_data}/data_fed2.dta"
+save "${path_data}/data_fed2.dta", emptyok replace
+}
+
+
 
 use "${path_data}/data_fed2.dta", clear
 gen valor=valorpagor+valorrestosapagarpagosr
