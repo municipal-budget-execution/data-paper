@@ -7,9 +7,12 @@ library(stringr)
 library(stringi)
 library(fixest)
 library(ggplot2)
+library(ggrepel)   # for clean, non-overlapping labels
 
 # ---- Settings ----
-in_dir  <- "/Users/tscot/Library/CloudStorage/OneDrive-WBG/Transparencia_Compras"
+in_dir  = "/Users/tscot/Dropbox/MiDES-data-paper-replication/Data/Intermediate/Transparency_Federal_2021"
+raw_dir = "/Users/tscot/Dropbox/MiDES-data-paper-replication/Data/Raw"
+path_figures = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures'
 
 #Opening Federal tender data
 data_lic = readRDS(paste0(in_dir, '/licitacoes_2021.rds')) %>% setDT()
@@ -17,7 +20,7 @@ data_lic = readRDS(paste0(in_dir, '/licitacoes_2021.rds')) %>% setDT()
 #Defining municipalities that might be included in our municipal data
 municipios = data_lic[uf %in% c('RS', 'PR', 'PE', 'MG', 'PB', 'CE')] %>% 
   .[, .N, by = .(uf, municipio)]
-fwrite(municipios, file = '/Users/tscot/Downloads/municipios.csv')
+fwrite(municipios, file = paste0(in_dir,'/municipios.csv'))
 
 #Opening items, which include info on winners
 data_item = readRDS(paste0(in_dir, '/licitacoes_items_2021.rds')) %>% setDT()
@@ -38,9 +41,9 @@ unique_winners_cnpj = data_item_sample[,.N, by = codigo_vencedor] %>%
 #unique_winners_cnpj_muni = data.table::merge.data.table(unique_winners_cnpj, items_query,all.x = T,
 #                                                        by.x = 'codigo_vencedor', by.y = 'cnpj')
 
-#fwrite(unique_winners_cnpj_muni, file = '/Users/tscot/Library/CloudStorage/OneDrive-WBG/Transparencia_Compras/suppliers_munic_federal.csv')
+#fwrite(unique_winners_cnpj_muni, file = paste0(in_dir, '/suppliers_munic_federal.csv')
 
-unique_winners_cnpj_muni = fread('/Users/tscot/Library/CloudStorage/OneDrive-WBG/Transparencia_Compras/suppliers_munic_federal.csv')
+unique_winners_cnpj_muni = fread(paste0(in_dir, '/suppliers_munic_federal.csv'))
 nrow(unique_winners_cnpj_muni[is.na(id_municipio)]) #1% we cannot find their CNPJ, likely bc they don't exist anymore
 
 #add info on location of suppliers to item level
@@ -52,7 +55,7 @@ data_item_sample = data_item_sample %>%
             by = 'codigo_vencedor')
 
 ##Municipality info: recovering municipality code using IBGE data, since in tenderndata we only have NAMES of municipality
-munic_code = readxl::read_xls('/Users/tscot/Library/CloudStorage/OneDrive-WBG/Transparencia_Compras/DTB_2024/RELATORIO_DTB_BRASIL_2024_MUNICIPIOS.xls') %>% 
+munic_code = readxl::read_xls(paste0(raw_dir,'/RELATORIO_DTB_BRASIL_2024_MUNICIPIOS.xls')) %>% 
   clean_names() %>% 
   select(uf, codigo_municipio_completo, nome_municipio)
 
@@ -84,7 +87,7 @@ rm(data_item, municipios, munic_code, unique_winners_cnpj)
 ################################## BRINGING MIDES DATA ###############################################
 
 #Open Mides data on winners
-participante_cnpj <- fread("/Users/tscot/Library/CloudStorage/OneDrive-WBG/Pckage_Mides/participante_cnpj.csv")
+participante_cnpj <- fread(paste0(in_dir,"/mides_2021_items_alternative_price.csv"))
 
 #Filtering for 2021 and winners, and generating dummy for same municipality
 participante_cnpj <- participante_cnpj[ano == 2021 & vencedor == 1] %>%
@@ -106,7 +109,7 @@ municipality_share = data_item_sample[!is.na(id_municipio_winner) & !is.na(valor
                                 share_local_mides_w = weighted.mean(same_municipality, w = valor_corrigido, na.rm = T), 
                                 number_mides = .N, 
                                 total_mides = sum(valor_corrigido)), by = id_municipio],
-             , by = 'id_municipio' ) %>% 
+             , by = 'id_municipio') %>% 
   mutate(number_total = number_federal + number_mides,
          value_total = total_federal + total_mides)
 
@@ -115,7 +118,7 @@ municipality_share = data_item_sample[!is.na(id_municipio_winner) & !is.na(valor
 ######################################################################################################
 ################################## FIGURES AND REGRESSIONS ###############################################
 
-library(ggrepel)   # for clean, non-overlapping labels
+
 
 highlights = c("PORTO ALEGRE", "RECIFE", "CURITIBA", "BELO HORIZONTE", 'FORTALEZA', "JOAO PESSOA")
 municipality_share[number_federal >= 10 & number_mides >= 10] %>%
@@ -141,19 +144,32 @@ municipality_share[number_federal >= 10 & number_mides >= 10] %>%
     axis.title = element_text(size = 14, face = "bold"),
     axis.text = element_text(size = 13),
     legend.position = "none"        # remove legend for size
-  )
+  )  
+ggsave(filename = paste0(path_figures, '/scatter_federal_localpurchase.png'),
+       width = 10,    # Increase the width
+       height = 5.625,    # Keep a standard height
+       units = "in",
+       dpi = 300)
 
-dt1 = participante_cnpj %>% 
-  select(id_municipio,sigla_uf,modalidade,same_municipality, valor_corrigido) %>% 
-  mutate(municipal = 0)
-dt2 = data_item_sample %>% 
+#Municipal purchases for regressions
+dt1 = participante_cnpj %>%
   mutate(municipal = 1,
-         modalidade = case_when(
-           codigo_modalidade_compra %in% c(9999,5) ~ 4,
-           codigo_modalidade_compra == 6 ~ 8,
-           codigo_modalidade_compra == 7 ~ 10,
-           .default = codigo_modalidade_compra)) %>% 
-  select(codigo_municipio_completo, uf_code,modalidade, same_municipality, valor_item,municipal) %>% 
+         modality_group = case_when(
+           modalidade %in% c(4,5,6) ~ "Auction",
+           modalidade == 8 ~ "Waiver",
+           modalidade == 10 ~ "Direct Contracting", 
+           .default = "Other")) %>% 
+  select(id_municipio,sigla_uf,modality_group,same_municipality, valor_corrigido,municipal)
+
+#Federal purchases for regressions
+dt2 = data_item_sample %>% 
+  mutate(municipal = 0,
+         modality_group = case_when(
+           codigo_modalidade_compra %in% c(9999,5) ~ "Auction",
+           codigo_modalidade_compra == 8 ~ "Waiver",
+           codigo_modalidade_compra == 7 ~ "Direct Contracting",
+           .default = "Other")) %>% 
+  select(codigo_municipio_completo, uf_code,modality_group, same_municipality, valor_item,municipal) %>% 
   rename(id_municipio = codigo_municipio_completo,
          sigla_uf = uf_code,
          valor_corrigido = valor_item) 
@@ -163,26 +179,39 @@ local_regression = rbindlist(list(dt1, dt2)) %>%
   mutate(number = n()) %>% 
   filter(number >= 50 & valor_corrigido >= 0) %>% 
   setDT()
-
-m1 = feols(same_municipality ~ municipal,
-           data = local_regression)
-m2 = feols(same_municipality ~ municipal,
-           data = local_regression,
-           weights = ~ valor_corrigido)
+# 
+# m1 = feols(same_municipality ~ municipal,
+#            data = local_regression)
 # m2 = feols(same_municipality ~ municipal,
-#            data = local_regression[id_municipio %in% c('2611606', '4314902', '3106200','4106902', '2507507', '2304400')])
-# m3 = feols(same_municipality ~ municipal,
-#            data = local_regression[!id_municipio %in% c('2611606', '4314902', '3106200','4106902', '2507507', '2304400')])
-m4 = feols(same_municipality ~ municipal | modalidade,
-           data = local_regression)
-m5 = feols(same_municipality ~ municipal | modalidade + id_municipio,
-           data = local_regression)
-m6 = feols(same_municipality ~ municipal | modalidade + id_municipio,
+#            data = local_regression,
+#            weights = ~ valor_corrigido)
+# m3 = feols(same_municipality ~ municipal | modality_group,
+#            data = local_regression)
+# m4 = feols(same_municipality ~ municipal | modality_group + id_municipio,
+#            data = local_regression)
+# m5 = feols(same_municipality ~ municipal | modality_group + id_municipio,
+#            data = local_regression,
+#            weights = ~ valor_corrigido)
+
+# m1 = feols(same_municipality ~ municipal,
+#            data = local_regression)
+# m2 = feols(same_municipality ~ municipal | modality_group + id_municipio,
+#            data = local_regression)
+m1 = feols(same_municipality ~ municipal,
            data = local_regression,
            weights = ~ valor_corrigido)
-# m6 = feols(same_municipality ~ municipal | modalidade + id_municipio,
-#            data = local_regression[id_municipio %in% c('2611606', '4314902', '3106200','4106902', '2507507', '2304400')])
-# m7 = feols(same_municipality ~ municipal | modalidade + id_municipio,
-#            data = local_regression[!id_municipio %in% c('2611606', '4314902', '3106200','4106902', '2507507', '2304400')])
+m2 = feols(same_municipality ~ municipal | modality_group + id_municipio,
+           data = local_regression,
+           weights = ~ valor_corrigido)
 
-etable(m1,m4, m5)
+etable( m3, m4)
+etable(m1, m2,
+       tex = TRUE, 
+       file = paste0(path_figures, "/regression_home_bias.tex"),
+       dict = c("same_municipality" = "Share Local Purchases","municipal" = "Municipal buyer", "modality_group" = "Modality", "id_municipio" = "Municipality"),
+       fitstat = ~ n + r2 + my)
+
+
+local_regression[, .(share = mean(same_municipality, na.rm = T), 
+                     wmean = weighted.mean(same_municipality, w = valor_corrigido, na.rm = T)),
+                 by = municipal]
