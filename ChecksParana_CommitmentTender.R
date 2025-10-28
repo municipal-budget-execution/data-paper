@@ -18,6 +18,7 @@ query = "WITH empenho AS (
   e.sigla_uf
   ,e.id_municipio
   ,e.id_empenho
+  ,e.elemento_despesa
   ,e.valor_final
   ,e.valor_inicial
   ,e.ano
@@ -32,6 +33,7 @@ query = "WITH empenho AS (
   ,r.id_empenho
   ,r.id_licitacao
   ,r.ano AS ano_rel
+  ,e.elemento_despesa
   ,e.valor_final
   ,e.valor_inicial
   ,e.ano AS ano_empenho
@@ -48,6 +50,7 @@ query = "WITH empenho AS (
     ,id_municipio
     ,id_licitacao
     ,ano_rel
+    ,MIN(elemento_despesa) AS min_elemento_despesa
     ,SUM(valor_final) AS agg_valor_final
     ,SUM(valor_inicial) AS agg_valor_inicial
     ,MIN(ano_empenho) AS min_ano
@@ -109,7 +112,11 @@ data[deviation >= -100] %>% ggplot() +
     axis.text = element_text(size = 13),
     legend.position = "none"        # remove legend for size
   )
-ggsave(filename = paste0(path_figures, '/histogram_deviations_parana_tender.png'))
+ggsave(filename = paste0(path_figures, '/histogram_deviations_parana_tender.png'),
+       width = 10,    # Increase the width
+       height = 5.625,    # Keep a standard height
+       units = "in",
+       dpi = 300)
 
 #stat
 data[, .(share_20 = mean(abs(deviation) <= 10, na.rm = T))]
@@ -117,7 +124,7 @@ data[, .(share_20 = mean(abs(deviation) <= 10, na.rm = T))]
 ########Deviations at licitacao level - By modality #####
 data[deviation >= -100] %>% 
   mutate(modality_group = factor(modality_group,
-                levels = c("Auction", "Other","Direct Contracting", "Waiver"))) %>% 
+                levels = c("Waiver", "Direct Contracting",  "Other" , "Auction"))) %>% 
   ggplot() + 
   geom_histogram(aes(x = ratio_lic,
                      y = stat(width*density)), binwidth = 10, 
@@ -137,7 +144,11 @@ data[deviation >= -100] %>%
     strip.background = element_blank()
   ) +
   facet_wrap(~ modality_group)
-ggsave(filename = paste0(path_figures, '/histogram_deviations_parana_tender_modality.png'))
+ggsave(filename = paste0(path_figures, '/histogram_deviations_parana_tender_modality.png'),
+                         width = 10,    # Increase the width
+                         height = 5.625,    # Keep a standard height
+                         units = "in",
+                         dpi = 300)
 
 
 
@@ -178,4 +189,49 @@ munic_agg %>%
     axis.text = element_text(size = 13),
     legend.position = "none"        # remove legend for size
   )
-ggsave(filename = paste0(path_figures, '/histogram_deviations_parana_tender_munic.png'))
+ggsave(filename = paste0(path_figures, '/histogram_deviations_parana_tender_munic.png'),
+       width = 10,    # Increase the width
+       height = 5.625,    # Keep a standard height
+       units = "in",
+       dpi = 300)
+
+
+munic_agg = data[,.(sum_lic = sum(valor_corrigido, na.rm = T),
+                    sum_com = sum(agg_valor_final, na.rm = T)),
+                 by = .(id_municipio)] %>%
+  .[,deviation := 100*(sum_lic/sum_com - 1)]
+
+munic_agg %>% 
+  mutate(ratio_lic = pmin(deviation, 300)) %>% ggplot() + 
+  geom_histogram(aes(x = ratio_lic,
+                     y = stat(width*density)), binwidth = 10, 
+                 color = "#0D3446",
+                 fill = "#1A476F", alpha = .5) + 
+  geom_vline(xintercept = 0, color = 'red', linetype = 'dashed', linewidth = .3) +
+  labs(
+    x = "Deviation Tenders - Procurement Commitments",
+    y = "Share"
+  ) +
+  theme_classic(base_size = 14) +   # increase base font size
+  theme(
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 13),
+    legend.position = "none"        # remove legend for size
+  )
+
+
+###ELEMENTO DESPESA
+setDT(data)
+data[, elemento := substr(as.character(min_elemento_despesa), 5, 7)] %>% 
+  .[!is.na(elemento), .(total = .N,
+        total_value = sum(agg_valor_final)), by = .(elemento)] %>% 
+  mutate(share_N = 100*total/sum(total),
+         share_value = 100*total_value/sum(total_value)) %>% 
+  arrange(-share_N)
+
+data[, elemento := substr(as.character(min_elemento_despesa), 5, 7)] %>% 
+  .[!is.na(elemento), .(total = .N,
+                        total_value = sum(agg_valor_final)), by = .(elemento %in% c('30','32', '33','34','35', '36', '37', '38', '39', '51', '52'))] %>% 
+  mutate(share_N = 100*total/sum(total),
+         share_value = 100*total_value/sum(total_value)) %>% 
+  arrange(-share_N)
