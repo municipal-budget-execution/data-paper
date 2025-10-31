@@ -11,69 +11,69 @@ path_file = '/Users/tscot/Dropbox/MiDES-data-paper-replication/Data/Intermediate
 path_figures = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures'
 
 #Set user's BigQuery billing ID
- set_billing_id("projetobd-302617")
-
-query = "WITH empenho AS (
-  SELECT
-  e.sigla_uf
-  ,e.id_municipio
-  ,e.id_empenho
-  ,e.elemento_despesa
-  ,e.valor_final
-  ,e.valor_inicial
-  ,e.ano
-  FROM `basedosdados.world_wb_mides.empenho` e
-  WHERE e.sigla_uf = 'PR'
-)
-
-, relacionamento AS (
-  SELECT
-  r.sigla_uf
-  ,r.id_municipio
-  ,r.id_empenho
-  ,r.id_licitacao
-  ,r.ano AS ano_rel
-  ,e.elemento_despesa
-  ,e.valor_final
-  ,e.valor_inicial
-  ,e.ano AS ano_empenho
-  FROM `basedosdados-dev.world_wb_mides.relacionamentos`  r
-    INNER JOIN empenho e
-      ON r.sigla_uf = e.sigla_uf
-      AND e.id_municipio = r.id_municipio
-      AND r.id_empenho =  e.id_empenho
-)
-
-, agg AS (
-  SELECT
-    sigla_uf
-    ,id_municipio
-    ,id_licitacao
-    ,ano_rel
-    ,MIN(elemento_despesa) AS min_elemento_despesa
-    ,SUM(valor_final) AS agg_valor_final
-    ,SUM(valor_inicial) AS agg_valor_inicial
-    ,MIN(ano_empenho) AS min_ano
-    ,MAX(ano_empenho) AS max_ano
-    ,COUNT(id_empenho) AS number_empenho
-  FROM relacionamento
-    GROUP BY sigla_uf, id_municipio, id_licitacao, ano_rel
-)
-
-SELECT
-  l.ano, l.sigla_uf, l.id_municipio, l.modalidade, l.valor, l.valor_corrigido, l.valor_orcamento, l.situacao, l.natureza_processo,
-  a.*,
-FROM `basedosdados.world_wb_mides.licitacao` l
-LEFT JOIN agg a
-  ON l.ano = a.ano_rel
-  AND l.sigla_uf = a.sigla_uf
-  AND l.id_municipio = a.id_municipio
-  AND l.id_licitacao = a.id_licitacao
-WHERE l.sigla_uf = 'PR' AND (situacao = '1' OR situacao IS NULL)
-"
-
-items_query = read_sql(query)
-fwrite(items_query,  paste0(path_file, '/PR_empenho_licitacao.csv'))
+#  set_billing_id("projetobd-302617")
+# 
+# query = "WITH empenho AS (
+#   SELECT
+#   e.sigla_uf
+#   ,e.id_municipio
+#   ,e.id_empenho
+#   ,e.elemento_despesa
+#   ,e.valor_final
+#   ,e.valor_inicial
+#   ,e.ano
+#   FROM `basedosdados.world_wb_mides.empenho` e
+#   WHERE e.sigla_uf = 'PR'
+# )
+# 
+# , relacionamento AS (
+#   SELECT
+#   r.sigla_uf
+#   ,r.id_municipio
+#   ,r.id_empenho
+#   ,r.id_licitacao
+#   ,r.ano AS ano_rel
+#   ,e.elemento_despesa
+#   ,e.valor_final
+#   ,e.valor_inicial
+#   ,e.ano AS ano_empenho
+#   FROM `basedosdados-dev.world_wb_mides.relacionamentos`  r
+#     INNER JOIN empenho e
+#       ON r.sigla_uf = e.sigla_uf
+#       AND e.id_municipio = r.id_municipio
+#       AND r.id_empenho =  e.id_empenho
+# )
+# 
+# , agg AS (
+#   SELECT
+#     sigla_uf
+#     ,id_municipio
+#     ,id_licitacao
+#     ,ano_rel
+#     ,MIN(elemento_despesa) AS min_elemento_despesa
+#     ,SUM(valor_final) AS agg_valor_final
+#     ,SUM(valor_inicial) AS agg_valor_inicial
+#     ,MIN(ano_empenho) AS min_ano
+#     ,MAX(ano_empenho) AS max_ano
+#     ,COUNT(id_empenho) AS number_empenho
+#   FROM relacionamento
+#     GROUP BY sigla_uf, id_municipio, id_licitacao, ano_rel
+# )
+# 
+# SELECT
+#   l.ano, l.sigla_uf, l.id_municipio, l.modalidade, l.valor, l.valor_corrigido, l.valor_orcamento, l.situacao, l.natureza_processo,
+#   a.*,
+# FROM `basedosdados.world_wb_mides.licitacao` l
+# LEFT JOIN agg a
+#   ON l.ano = a.ano_rel
+#   AND l.sigla_uf = a.sigla_uf
+#   AND l.id_municipio = a.id_municipio
+#   AND l.id_licitacao = a.id_licitacao
+# WHERE l.sigla_uf = 'PR' AND (situacao = '1' OR situacao IS NULL)
+# "
+# 
+# items_query = read_sql(query)
+# fwrite(items_query,  paste0(path_file, '/PR_empenho_licitacao.csv'))
 
 data = fread(paste0(path_file, '/PR_empenho_licitacao.csv'))
 
