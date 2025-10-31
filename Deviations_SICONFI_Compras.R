@@ -87,7 +87,7 @@ median_all = median(data$ratio_lic, na.rm = T)
 
 data %>% mutate(ratio_lic = pmin(ratio_lic, 300)) %>% ggplot() + 
   geom_histogram(aes(x = ratio_lic,
-                 y = stat(width*density)), binwidth = 5, 
+                 y = stat(width*density)), binwidth = 10, 
                  color = "#0D3446",
                  fill = "#1A476F", alpha = .5) + 
   geom_vline(xintercept = median_all, color = 'red', linetype = 'dashed', linewidth = 1) + 
@@ -96,6 +96,7 @@ data %>% mutate(ratio_lic = pmin(ratio_lic, 300)) %>% ggplot() +
     x = "Deviation Tenders - Procurement Commitments",
     y = "Share"
   )  +
+  ylim(0,.12) + 
   theme_classic(base_size = 14) +   # increase base font size
   theme(
     axis.title = element_text(size = 14, face = "bold"),
@@ -108,9 +109,9 @@ ggsave(filename = paste0(path_figures, '/deviations_procurement_all.png'),
        units = "in",
        dpi = 300)
 
-data %>%  mutate(ratio_lic = pmin(ratio_lic, 200)) %>% ggplot() + 
+data %>%  mutate(ratio_lic = pmin(ratio_lic, 300)) %>% ggplot() + 
   geom_histogram(aes(x = ratio_lic,
-                    y = stat(width*density)), binwidth = 5,
+                    y = stat(width*density)), binwidth = 10,
                  color = "#0D3446",
                  fill = "#1A476F", alpha = .5) + 
   geom_vline(xintercept = 0) + 
@@ -119,10 +120,12 @@ data %>%  mutate(ratio_lic = pmin(ratio_lic, 200)) %>% ggplot() +
     x = "Deviation Tenders - Procurement Commitments",
     y = "Share"
   ) +
+  ylim(0,.12) + 
+  scale_y_continuous(breaks = c(0, .05, .10, .12)) + 
   theme_classic(base_size = 14) +   # increase base font size
   theme(
     axis.title = element_text(size = 14, face = "bold"),
-    axis.text = element_text(size = 13),
+    axis.text = element_text(size = 12),
     strip.text = element_text(size = 9, face = "bold"),
     strip.background = element_blank()
   ) +
