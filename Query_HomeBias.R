@@ -1,6 +1,8 @@
 # #Set user's BigQuery billing ID
 set_billing_id("projetobd-302617")
 
+in_dir  = "/Users/tscot/Dropbox/MiDES-data-paper-replication/Data/Intermediate/Transparency_Federal_2021"
+
 query <- "
 SELECT
     a.*, l.modalidade, l.valor_corrigido, i.sum_item_value,b.data, b.cnpj, b.id_municipio, b.data_inicio_atividade,
@@ -17,7 +19,8 @@ LEFT JOIN (
   ) l
 ON a.id_licitacao_bd = l.id_licitacao_bd
 LEFT JOIN (
-    SELECT documento, id_licitacao_bd,
+    SELECT CAST(FLOOR(SAFE_CAST(documento AS FLOAT64)) AS STRING) AS documento, 
+    id_licitacao_bd,
     SUM(
       CASE 
         WHEN sigla_uf = 'PR' THEN quantidade_proposta*valor_vencedor
@@ -59,4 +62,4 @@ WHERE
 items_query = read_sql(query)
 
 items_query = setDT(items_query)
-fwrite(items_query,  '/Users/tscot/Dropbox/MiDES-data-paper-replication/Data/Intermediate/mides_2021_items_alternative_price.csv')
+fwrite(items_query, paste0(in_dir, '/mides_2021_items_alternative_price.csv'))
