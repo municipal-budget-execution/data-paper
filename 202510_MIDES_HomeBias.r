@@ -20,46 +20,46 @@ library(patchwork)
 # Set user's BigQuery billing ID 
 # project_id_bq <- "your_project_id" # Removed so PII is not shared 
 # input_path <- "your/input/path" 
-
-query <- "
-SELECT
-    a.*, l.modalidade, b.data, b.cnpj, b.id_municipio, b.data_inicio_atividade,
-    b.sigla_uf, b.cnpj_basico, b.identificador_matriz_filial, s.opcao_simples, s.opcao_mei
-FROM (
-    SELECT *
-    FROM `basedosdados.world_wb_mides.licitacao_participante`
-    WHERE id_licitacao_bd IS NOT NULL
-  ) a
-LEFT JOIN (
-    SELECT modalidade, id_licitacao_bd
-    FROM `basedosdados.world_wb_mides.licitacao`
-    WHERE id_licitacao_bd IS NOT NULL
-  ) l
-ON a.id_licitacao_bd = l.id_licitacao_bd
-LEFT JOIN (
-    SELECT
-        CAST(cnpj AS STRING) AS cnpj,
-        cnpj_basico,
-        id_municipio,
-        sigla_uf,
-        identificador_matriz_filial,
-        data_inicio_atividade,
-        MAX(data) AS data
-    FROM
-        `basedosdados.br_me_cnpj.estabelecimentos`
-    GROUP BY
-        cnpj,
-        cnpj_basico,
-        id_municipio,
-        sigla_uf,
-        data_inicio_atividade,
-        identificador_matriz_filial
-) b ON CAST(a.documento AS STRING) = b.cnpj
-LEFT JOIN
-    `basedosdados.br_me_cnpj.simples` s ON b.cnpj_basico = s.cnpj_basico
-WHERE
-    a.tipo = '1'
-"
+# 
+# query <- "
+# SELECT
+#     a.*, l.modalidade, b.data, b.cnpj, b.id_municipio, b.data_inicio_atividade,
+#     b.sigla_uf, b.cnpj_basico, b.identificador_matriz_filial, s.opcao_simples, s.opcao_mei
+# FROM (
+#     SELECT *
+#     FROM `basedosdados.world_wb_mides.licitacao_participante`
+#     WHERE id_licitacao_bd IS NOT NULL
+#   ) a
+# LEFT JOIN (
+#     SELECT modalidade, id_licitacao_bd
+#     FROM `basedosdados.world_wb_mides.licitacao`
+#     WHERE id_licitacao_bd IS NOT NULL
+#   ) l
+# ON a.id_licitacao_bd = l.id_licitacao_bd
+# LEFT JOIN (
+#     SELECT
+#         CAST(cnpj AS STRING) AS cnpj,
+#         cnpj_basico,
+#         id_municipio,
+#         sigla_uf,
+#         identificador_matriz_filial,
+#         data_inicio_atividade,
+#         MAX(data) AS data
+#     FROM
+#         `basedosdados.br_me_cnpj.estabelecimentos`
+#     GROUP BY
+#         cnpj,
+#         cnpj_basico,
+#         id_municipio,
+#         sigla_uf,
+#         data_inicio_atividade,
+#         identificador_matriz_filial
+# ) b ON CAST(a.documento AS STRING) = b.cnpj
+# LEFT JOIN
+#     `basedosdados.br_me_cnpj.simples` s ON b.cnpj_basico = s.cnpj_basico
+# WHERE
+#     a.tipo = '1'
+# "
 
 # run_query_and_save_results <- function() {
 #   participante_cnpj <- bq_project_query(project_id_bq, query)
@@ -75,9 +75,15 @@ WHERE
 ################################      1. CLEANING DATA.   ##########################################
 #########################################################################################################################
 
+
+# ---- Settings ----
+in_dir  = "/Users/tscot/Dropbox/MiDES-data-paper-replication/Data/Intermediate/Transparency_Federal_2021"
+raw_dir = "/Users/tscot/Dropbox/MiDES-data-paper-replication/Data/Raw"
+path_figures = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures'
+
 # Participant and population data
-participante_cnpj <- fread("/Users/tscot/Library/CloudStorage/OneDrive-WBG/Pckage_Mides/participante_cnpj.csv")
-population <- fread("/Users/tscot/Library/CloudStorage/OneDrive-WBG/Pckage_Mides/population.csv")
+participante_cnpj <- fread(paste0(in_dir, '/mides_2021_items_alternative_price.csv'))
+population <- fread(paste0(raw_dir, '/population.csv'))
 
 nrow(participante_cnpj[vencedor == 1, .N, by = .(cnpj_basico)])
 #--- Same municipality ---------------------------------------------------------
@@ -166,8 +172,8 @@ participante_cnpj <- participante_cnpj %>%
 home_bias <- participante_cnpj %>%
   .[, .(same_municipality = mean(same_municipality, na.rm = TRUE),
              same_state = mean(same_state, na.rm = TRUE),
-             same_municipality_w = weighted.mean(same_municipality,w = valor_corrigido, na.rm = TRUE),
-             same_state_w = weighted.mean(same_state,  w = valor_corrigido, na.rm = TRUE)),
+             same_municipality_w = weighted.mean(same_municipality,w = coalesce(sum_item_value,0), na.rm = TRUE),
+             same_state_w = weighted.mean(same_state,  w = coalesce(sum_item_value,0), na.rm = TRUE)),
     by = .(id_municipio, sigla_uf, vencedor)]
 
 home_bias[, ":=" (average_state = mean(same_municipality),
@@ -182,18 +188,19 @@ vencedores_ufs <- home_bias %>%
 mean_df <- vencedores_ufs %>%
   group_by(sigla_uf) %>%
   summarise(average_state = first(average_state, na.rm = TRUE),
-            average_state_w = first(average_state_w, na.rm = TRUE),)
+            average_state_w = first(average_state_w, na.rm = TRUE)) %>% 
+  setDT()
 
 
-######################## FIGURE 6 PAPER: WEIGHTED ######################## 
-ggplot(vencedores_ufs, aes(x = same_municipality_w)) +
+######################## FIGURE A PAPER: WEIGHTED ######################## 
+ggplot(vencedores_ufs[! sigla_uf %in% c('PB', 'PE') ], aes(x = same_municipality_w)) +
   geom_histogram(aes(y = stat(width*density)), binwidth = .025,
                  color = "#0D3446",
                  fill = "#1A476F", linewidth = 0.5) +
   geom_vline(aes(xintercept = average_state_w), 
              color = "red", linetype = "dashed", linewidth = .5) +
   geom_text(
-    data = mean_df, 
+    data = mean_df[! sigla_uf %in% c('PB', 'PE')], 
     aes(x = average_state_w + 0.02 , y = Inf, label = sprintf("%.2f", average_state_w)),
     color = "red", hjust = 0, vjust = 2, size = 2
   ) +
@@ -209,11 +216,11 @@ ggplot(vencedores_ufs, aes(x = same_municipality_w)) +
     axis.title = element_text(size = 10),
     strip.background = element_blank()
   )
-ggsave(filename = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures/home_bias_by_state_weighted.png')
+ggsave(filename = paste0(path_figures,'/home_bias_by_state_weighted.png'))
 
 
 
-######################## FIGURE A PAPER: Unweighted. ######################## 
+######################## FIGURE 8 PAPER: Unweighted. ######################## 
 
 ggplot(vencedores_ufs, aes(x = same_municipality)) +
   geom_histogram(aes(y = stat(width*density)), binwidth = .025,
@@ -238,7 +245,7 @@ ggplot(vencedores_ufs, aes(x = same_municipality)) +
     axis.title = element_text(size = 10),
     strip.background = element_blank()
   )
-ggsave(filename = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures/home_bias_by_state_unw.png')
+ggsave(filename = paste0(path_figures,'/home_bias_by_state_unw.png'))
 
 #Table for referees: comparing weighted vs. unweighted by state
 a = vencedores_ufs[, .(unweighted = round(100*first(average_state), 2),
@@ -254,8 +261,8 @@ home_bias_competition <- participante_cnpj %>%
   .[, .(number = .N,
         same_municipality = mean(same_municipality, na.rm = TRUE),
         same_state = mean(same_state, na.rm = TRUE),
-        same_municipality_w = weighted.mean(same_municipality,w = valor_corrigido, na.rm = TRUE),
-        same_state_w = weighted.mean(same_state,  w = valor_corrigido, na.rm = TRUE)),
+        same_municipality_w = weighted.mean(same_municipality,w = coalesce(sum_item_value,0), na.rm = TRUE),
+        same_state_w = weighted.mean(same_state,  w = coalesce(sum_item_value,0), na.rm = TRUE)),
     by = .(licitacao_discricionaria, id_municipio,vencedor)]
 
 home_bias_competition[, ":=" (average_modality = mean(same_municipality),
@@ -266,24 +273,6 @@ home_bias_competition[, ":=" (average_modality = mean(same_municipality),
                                 is.na(licitacao_discricionaria), NA)), 
                   by = .(vencedor, licitacao_discricionaria)]
 
-
-# vencedores1 <- home_bias_competition %>%
-#   filter(vencedor == 1 & licitacao_discricionaria == 0)
-# 
-# media_vencedores1 <- mean(vencedores1$same_municipality, na.rm = TRUE)
-# vencedores1 <- vencedores1 %>% mutate(tender_type = "Competitive tender")
-# 
-# vencedores2 <- home_bias_competition %>%
-#   filter(vencedor == 1 & licitacao_discricionaria == 1)
-# media_vencedores2 <- mean(vencedores2$same_municipality, na.rm = TRUE)
-# vencedores2 <- vencedores2 %>% mutate(tender_type = "Non-competitive tender")
-# 
-# plot_data <- bind_rows(vencedores1, vencedores2)
-# 
-# mean_df <- tibble(
-#   tender_type = c("Competitive tender", "Non-competitive tender"),
-#   mean_val = c(media_vencedores1, media_vencedores2)
-# )
 
 
 vencedores_modality <- home_bias_competition %>%
@@ -321,7 +310,7 @@ ggplot(vencedores_modality, aes(x = same_municipality)) +
     strip.background = element_blank(),
     strip.text = element_text(face = "bold")
   )
-ggsave(filename = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures/home_bias_by_type_unw.png')
+ggsave(filename = paste0(path_figures,'/home_bias_by_type_unw.png'))
 
 ######################## FIGURE 7 PAPER: UNWEIGHTED ######################## 
 
@@ -349,7 +338,7 @@ ggplot(vencedores_modality, aes(x = same_municipality_w)) +
     strip.background = element_blank(),
     strip.text = element_text(face = "bold")
   )
-ggsave(filename = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures/home_bias_by_type_weighted.png')
+ggsave(filename = paste0(path_figures,'home_bias_by_type_weighted.png'))
 
 
 ###############################.   2.3 ABOVE VS. BELOW MEDIAN POPULATION LEVEL.  ####################################################################
@@ -421,7 +410,7 @@ ggplot(vencedores_population, aes(x = same_municipality)) +
     strip.background = element_blank(),
     strip.text = element_text(face = "bold")
   )
-ggsave(filename = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures/home_bias_population_unw.png')
+ggsave(filename = paste0('/home_bias_population_unw.png'))
 
 ######################## FIGURE 7 PAPER: UNWEIGHTED ######################## 
 
@@ -449,11 +438,11 @@ ggplot(vencedores_population, aes(x = same_municipality_w)) +
     strip.background = element_blank(),
     strip.text = element_text(face = "bold")
   )
-ggsave(filename = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures/home_bias_population_weighted.png')
+ggsave(filename = paste0(path_figures,'/home_bias_population_weighted.png'))
 
 
 ###New scatter plot
-ggplot(vencedores_population, aes(x = log(populacao))) +
+ggplot(vencedores_population[!sigla_uf %in% c('PB', 'PE')], aes(x = log(populacao))) +
   geom_smooth(method = 'loess', aes(y = same_municipality), color = "#0D3446" ) + 
   geom_smooth(method = 'loess', aes(y = same_municipality_w), color = "red") +
   scale_x_continuous(limits = c(6,13.81)) +
@@ -470,7 +459,7 @@ ggplot(vencedores_population, aes(x = log(populacao))) +
     axis.text=element_text(size=12),
     axis.title = element_text(size=12)
   )
-ggsave(filename = '/Users/tscot/Dropbox/Aplicativos/Overleaf/MiDES - New Data and Facts from Brazil/figures/home_bias_population_scatter.png',
+ggsave(filename = paste0(path_figures,'/home_bias_population_scatter.png'),
        width = 9,
        height = 6,
        dpi = 300)
