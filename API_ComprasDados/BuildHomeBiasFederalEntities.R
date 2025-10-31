@@ -8,6 +8,7 @@ library(stringi)
 library(fixest)
 library(ggplot2)
 library(ggrepel)   # for clean, non-overlapping labels
+library(DescTools)
 
 # ---- Settings ----
 in_dir  = "/Users/tscot/Dropbox/MiDES-data-paper-replication/Data/Intermediate/Transparency_Federal_2021"
@@ -78,7 +79,8 @@ data_item_sample = data_item_sample %>%
     codigo_municipio_completo == id_municipio_winner ~ 1,
     codigo_municipio_completo != id_municipio_winner ~ 0,
     is.na(id_municipio_winner) ~ NA_real_),
-  same_municipality = as.numeric(same_municipality))
+  same_municipality = as.numeric(same_municipality),
+  valor_item_w = Winsorize(valor_item, val = quantile(valor_item, probs = c(0,.99), na.rm = T)))
     
 rm(data_item, municipios, munic_code, unique_winners_cnpj)
 
@@ -95,24 +97,25 @@ participante_cnpj <- participante_cnpj[ano == 2021 & vencedor == 1] %>%
       id_municipio == id_municipio_1 ~ 1,
       id_municipio != id_municipio_1 ~ 0,
       is.na(id_municipio_1) ~ NA_real_),
-    same_municipality = as.numeric(same_municipality))
+    same_municipality = as.numeric(same_municipality),
+    sum_item_value_w = Winsorize(sum_item_value, 
+                                 val = quantile(sum_item_value, probs = c(0, .99), na.rm = T)))
 
 #Creating municipality level indicators of local purchases
-municipality_share = data_item_sample[!is.na(id_municipio_winner) & !is.na(valor_item), 
+municipality_share = data_item_sample[!is.na(id_municipio_winner) & !is.na(valor_item_w), 
                                       .(share_local_federal = mean(same_municipality, na.rm = T), 
-                                        share_local_federal_w = weighted.mean(same_municipality, w = valor_item, na.rm = T),
+                                        share_local_federal_w = weighted.mean(same_municipality, valor_item_w, na.rm = T),
                                         number_federal = .N,
-                                        total_federal = sum(valor_item)),by = .(municipio, codigo_municipio_completo)] %>% 
+                                        total_federal = sum(valor_item_w)),by = .(municipio, codigo_municipio_completo)] %>% 
   mutate(id_municipio = as.integer(codigo_municipio_completo)) %>% 
-  inner_join(participante_cnpj[!is.na(id_municipio_1) & !is.na(valor_corrigido), 
+  inner_join(participante_cnpj[!is.na(id_municipio_1) & !is.na(sum_item_value_w), 
                               .(share_local_mides = mean(same_municipality, na.rm = T), 
-                                share_local_mides_w = weighted.mean(same_municipality, w = valor_corrigido, na.rm = T), 
+                                share_local_mides_w = weighted.mean(same_municipality, w = sum_item_value_w, na.rm = T), 
                                 number_mides = .N, 
-                                total_mides = sum(valor_corrigido)), by = id_municipio],
+                                total_mides = sum(sum_item_value_w)), by = id_municipio],
              , by = 'id_municipio') %>% 
   mutate(number_total = number_federal + number_mides,
          value_total = total_federal + total_mides)
-
 
 
 ######################################################################################################
@@ -159,7 +162,7 @@ dt1 = participante_cnpj %>%
            modalidade == 8 ~ "Waiver",
            modalidade == 10 ~ "Direct Contracting", 
            .default = "Other")) %>% 
-  select(id_municipio,sigla_uf,modality_group,same_municipality, valor_corrigido,municipal)
+  select(id_municipio,sigla_uf,modality_group,same_municipality, sum_item_value_w,municipal)
 
 #Federal purchases for regressions
 dt2 = data_item_sample %>% 
@@ -169,15 +172,15 @@ dt2 = data_item_sample %>%
            codigo_modalidade_compra == 8 ~ "Waiver",
            codigo_modalidade_compra == 7 ~ "Direct Contracting",
            .default = "Other")) %>% 
-  select(codigo_municipio_completo, uf_code,modality_group, same_municipality, valor_item,municipal) %>% 
+  select(codigo_municipio_completo, uf_code,modality_group, same_municipality, valor_item_w,municipal) %>% 
   rename(id_municipio = codigo_municipio_completo,
          sigla_uf = uf_code,
-         valor_corrigido = valor_item) 
+         sum_item_value_w = valor_item_w) 
 
 local_regression = rbindlist(list(dt1, dt2)) %>% 
   group_by(id_municipio, municipal) %>% 
   mutate(number = n()) %>% 
-  filter(number >= 50 & valor_corrigido >= 0) %>% 
+  filter(number >= 50 & sum_item_value_w >= 0) %>% 
   setDT()
 # 
 # m1 = feols(same_municipality ~ municipal,
@@ -199,12 +202,12 @@ local_regression = rbindlist(list(dt1, dt2)) %>%
 #            data = local_regression)
 m1 = feols(same_municipality ~ municipal,
            data = local_regression,
-           weights = ~ valor_corrigido)
+           weights = ~ sum_item_value_w)
 m2 = feols(same_municipality ~ municipal | modality_group + id_municipio,
            data = local_regression,
-           weights = ~ valor_corrigido)
+           weights = ~ sum_item_value_w)
 
-etable( m3, m4)
+etable( m1, m2)
 etable(m1, m2,
        tex = TRUE, 
        file = paste0(path_figures, "/regression_home_bias.tex"),
