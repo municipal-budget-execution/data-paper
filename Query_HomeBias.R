@@ -1,3 +1,9 @@
+library(tidyverse)
+library(data.table)
+library(basedosdados)
+library(bigrquery)
+library(readr)
+
 # #Set user's BigQuery billing ID
 set_billing_id("projetobd-302617")
 
@@ -27,7 +33,7 @@ LEFT JOIN (
         ELSE COALESCE(valor_total,0)
       END)
     AS sum_item_value
-    FROM `basedosdados.world_wb_mides.licitacao_item`
+    FROM `basedosdados-dev.world_wb_mides.licitacao_item`
     WHERE id_licitacao_bd IS NOT NULL
     GROUP BY documento, id_licitacao_bd
   ) i
