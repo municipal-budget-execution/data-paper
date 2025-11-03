@@ -440,18 +440,15 @@ ggplot(vencedores_population, aes(x = same_municipality_w)) +
   )
 ggsave(filename = paste0(path_figures,'/home_bias_population_weighted.png'))
 
-
-###New scatter plot
-ggplot(vencedores_population[!sigla_uf %in% c('PB', 'PE')], aes(x = log(populacao))) +
+###New scatter plot -  UNWEIGHTED
+ggplot(vencedores_population, aes(x = log(populacao))) +
   geom_smooth(method = 'loess', aes(y = same_municipality), color = "#0D3446" ) + 
-  geom_smooth(method = 'loess', aes(y = same_municipality_w), color = "red") +
   scale_x_continuous(limits = c(6,13.81)) +
   labs(
     y = "Share from same-municipality",
     x = "Log(population)"
   ) +
-  annotate("text", x=8, y=.28, label= "Share of purchases", color = 'red') + 
-  annotate("text", x=8.5, y=.15, label= "Share of suppliers", color = "#0D3446") + 
+  annotate("text", x=9, y=.15, label= "Share of suppliers", color = "#0D3446") + 
   theme_classic() +
   theme(
     strip.background = element_blank(),
@@ -460,6 +457,30 @@ ggplot(vencedores_population[!sigla_uf %in% c('PB', 'PE')], aes(x = log(populaca
     axis.title = element_text(size=12)
   )
 ggsave(filename = paste0(path_figures,'/home_bias_population_scatter.png'),
+       width = 9,
+       height = 6,
+       dpi = 300)
+
+
+###New scatter plot - WEIGHTED + UNWEIGHTED
+ggplot(vencedores_population[!sigla_uf %in% c('PB', 'PE')], aes(x = log(populacao))) +
+  geom_smooth(method = 'loess', aes(y = same_municipality), color = "#0D3446" ) + 
+  geom_smooth(method = 'loess', aes(y = same_municipality_w), color = "red") +
+  scale_x_continuous(limits = c(6,13.81)) +
+  labs(
+    y = "Share from same-municipality",
+    x = "Log(population)"
+  ) +
+  annotate("text", x=8, y=.35, label= "Share of purchases", color = 'red') + 
+  annotate("text", x=8.5, y=.15, label= "Share of suppliers", color = "#0D3446") + 
+  theme_classic() +
+  theme(
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold"),
+    axis.text=element_text(size=12),
+    axis.title = element_text(size=12)
+  )
+ggsave(filename = paste0(path_figures,'/home_bias_population_scatter_both.png'),
        width = 9,
        height = 6,
        dpi = 300)
