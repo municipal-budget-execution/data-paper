@@ -102,17 +102,19 @@ participante_cnpj <- participante_cnpj[ano == 2021 & vencedor == 1] %>%
                                  val = quantile(sum_item_value, probs = c(0, .99), na.rm = T)))
 
 #Creating municipality level indicators of local purchases
-municipality_share = data_item_sample[!is.na(id_municipio_winner) & !is.na(valor_item_w), 
+municipality_share = data_item_sample[!is.na(id_municipio_winner), 
                                       .(share_local_federal = mean(same_municipality, na.rm = T), 
-                                        share_local_federal_w = weighted.mean(same_municipality, valor_item_w, na.rm = T),
+                                        share_local_federal_w = weighted.mean(same_municipality, 
+                                                                              w = coalesce(valor_item_w,0), na.rm = T),
                                         number_federal = .N,
                                         total_federal = sum(valor_item_w)),by = .(municipio, codigo_municipio_completo)] %>% 
   mutate(id_municipio = as.integer(codigo_municipio_completo)) %>% 
-  inner_join(participante_cnpj[!is.na(id_municipio_1) & !is.na(sum_item_value_w), 
+  inner_join(participante_cnpj[!is.na(id_municipio_1) , 
                               .(share_local_mides = mean(same_municipality, na.rm = T), 
-                                share_local_mides_w = weighted.mean(same_municipality, w = sum_item_value_w, na.rm = T), 
+                                share_local_mides_w = weighted.mean(same_municipality, 
+                                                                    w = coalesce(sum_item_value_w, 0),na.rm = T), 
                                 number_mides = .N, 
-                                total_mides = sum(sum_item_value_w)), by = id_municipio],
+                                total_mides = sum(coalesce(sum_item_value_w,0))), by = id_municipio],
              , by = 'id_municipio') %>% 
   mutate(number_total = number_federal + number_mides,
          value_total = total_federal + total_mides)
@@ -121,12 +123,11 @@ municipality_share = data_item_sample[!is.na(id_municipio_winner) & !is.na(valor
 ######################################################################################################
 ################################## FIGURES AND REGRESSIONS ###############################################
 
-
-
+####MAIN FIGURE: UNWEIGHTED
 highlights = c("PORTO ALEGRE", "RECIFE", "CURITIBA", "BELO HORIZONTE", 'FORTALEZA', "JOAO PESSOA")
 municipality_share[number_federal >= 10 & number_mides >= 10] %>%
   mutate(highlight = ifelse(municipio %in% highlights, "Highlight", "Other")) %>%
-  ggplot(aes(x = share_local_mides_w, y = share_local_federal_w)) +
+  ggplot(aes(x = share_local_mides, y = share_local_federal)) +
   geom_point(aes(size = value_total,color = highlight), alpha = 0.7) +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +  # replace geom_line diagonal
   geom_text_repel(
@@ -154,6 +155,39 @@ ggsave(filename = paste0(path_figures, '/scatter_federal_localpurchase.png'),
        units = "in",
        dpi = 300)
 
+
+#### APPENDIX FIGURE: WEIGHTED
+municipality_share[number_federal >= 10 & number_mides >= 10] %>%
+  mutate(highlight = ifelse(municipio %in% highlights, "Highlight", "Other")) %>%
+  ggplot(aes(x = share_local_mides_w, y = share_local_federal_w)) +
+  geom_point(aes(size = value_total,color = highlight), alpha = 0.7) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +  # replace geom_line diagonal
+  geom_text_repel(
+    data = municipality_share[municipio %in% highlights],
+    aes(label = municipio),
+    size = 2.5,
+    color = "#E74C3C",
+    max.overlaps = 10) +
+  scale_color_manual(
+    values = c("Highlight" = "#E74C3C", "Other" = "#2C3E50")
+  ) +
+  labs(
+    x = "Share of Local Spending (MIDES)",
+    y = "Share of Local Spending (Federal)",
+  ) +
+  theme_classic(base_size = 14) +   # increase base font size
+  theme(
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 13),
+    legend.position = "none"        # remove legend for size
+  )  
+ggsave(filename = paste0(path_figures, '/scatter_federal_localpurchase_weighted.png'),
+       width = 10,    # Increase the width
+       height = 5.625,    # Keep a standard height
+       units = "in",
+       dpi = 300)
+
+###################### REGRESSIONS ####################
 #Municipal purchases for regressions
 dt1 = participante_cnpj %>%
   mutate(municipal = 1,
@@ -180,40 +214,44 @@ dt2 = data_item_sample %>%
 local_regression = rbindlist(list(dt1, dt2)) %>% 
   group_by(id_municipio, municipal) %>% 
   mutate(number = n()) %>% 
-  filter(number >= 50 & sum_item_value_w >= 0) %>% 
+  filter(number >= 50) %>% 
   setDT()
-# 
-# m1 = feols(same_municipality ~ municipal,
-#            data = local_regression)
-# m2 = feols(same_municipality ~ municipal,
-#            data = local_regression,
-#            weights = ~ valor_corrigido)
-# m3 = feols(same_municipality ~ municipal | modality_group,
-#            data = local_regression)
-# m4 = feols(same_municipality ~ municipal | modality_group + id_municipio,
-#            data = local_regression)
-# m5 = feols(same_municipality ~ municipal | modality_group + id_municipio,
-#            data = local_regression,
-#            weights = ~ valor_corrigido)
 
-# m1 = feols(same_municipality ~ municipal,
-#            data = local_regression)
-# m2 = feols(same_municipality ~ municipal | modality_group + id_municipio,
-#            data = local_regression)
+##### MAIN TABLE: UNWEIGHTED
 m1 = feols(same_municipality ~ municipal,
            data = local_regression,
-           weights = ~ sum_item_value_w)
+           cluster = ~id_municipio^municipal)
 m2 = feols(same_municipality ~ municipal | modality_group + id_municipio,
            data = local_regression,
-           weights = ~ sum_item_value_w)
+           cluster = ~id_municipio^municipal)
 
 etable( m1, m2)
 etable(m1, m2,
        tex = TRUE, 
        file = paste0(path_figures, "/regression_home_bias.tex"),
+       dict = c("same_municipality" = "Share Local Suppliers",
+                "municipal" = "Municipal buyer", 
+                "modality_group" = "Modality", 
+                "id_municipio" = "Municipality"),
+       fitstat = ~ n + r2 + my,
+       notes = )
+
+##### APPENDIX TABLE: WEIGHTED
+m1_w = feols(same_municipality ~ municipal,
+           data = local_regression,
+           weights = ~ pmax(sum_item_value_w,0),
+           cluster = ~id_municipio^municipal)
+m2_w = feols(same_municipality ~ municipal | modality_group + id_municipio,
+           data = local_regression,
+           weights = ~ pmax(sum_item_value_w,0),
+           cluster = ~id_municipio^municipal)
+
+etable( m1, m1_w, m2, m2_w)
+etable(m1_w, m2_w,
+       tex = TRUE, 
+       file = paste0(path_figures, "/regression_home_bias_weighted.tex"),
        dict = c("same_municipality" = "Share Local Purchases","municipal" = "Municipal buyer", "modality_group" = "Modality", "id_municipio" = "Municipality"),
        fitstat = ~ n + r2 + my)
-
 
 local_regression[, .(share = mean(same_municipality, na.rm = T), 
                      wmean = weighted.mean(same_municipality, w = valor_corrigido, na.rm = T)),
