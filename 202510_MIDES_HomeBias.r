@@ -485,3 +485,50 @@ ggsave(filename = paste0(path_figures,'/home_bias_population_scatter_both.png'),
        height = 6,
        dpi = 300)
 
+
+####REGRESSIONS
+data_munic = fread(file.path(raw_dir, "full_budget_execution_index.csv"), 
+                   showProgress = TRUE,
+                   encoding = "Latin-1")
+regressions = participante_cnpj[vencedor == 1] %>% 
+  left_join(data_munic %>% select(year, municipality, gdp, population), 
+            by = c("ano" = 'year',
+                   'id_municipio' = 'municipality'))
+
+
+  # Define regression models
+  reg_models <- list(
+    same_municipality   ~ log(gdp) + log(population)  + licitacao_discricionaria,
+    same_municipality   ~ log(gdp) + log(population)  + licitacao_discricionaria | ano,
+    same_municipality   ~ log(gdp) + log(population)  + licitacao_discricionaria | sigla_uf + ano
+  )
+  
+  # Run regression for each model
+  reg_results <- lapply(reg_models, function(model) fixest::feols(model, data = regressions, 
+                                                                  cluster = ~ id_municipio))
+  
+  # Variable names and descriptions
+  dict <- c(
+    "same_municipality" = "\\% Local Suppliers",
+    "log(gdp)" = "ln(GDP)",
+    "log(population)" = "ln(Population)",
+    "licitacao_discricionaria" = "Non-Competitive Tenders",
+    "ano" = "Year",
+    "sigla_uf" = "State"
+  )
+  
+  # Create tables
+fixest::setFixest_etable(digits.stats = 2, drop = c("Constant"))
+fixest::etable(
+    reg_results,
+    title = "Correlations",
+    fitstat = c("n", "my", "rmse", "r2", "ar2"),
+    digits = 3,
+    tex = TRUE,
+    dict = dict,
+    file = paste0(path_figures, "/reg_home_bias_correlates.tex")
+  )
+  
+
+  
+
