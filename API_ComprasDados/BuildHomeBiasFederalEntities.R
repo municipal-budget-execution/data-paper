@@ -140,8 +140,8 @@ municipality_share[number_federal >= 10 & number_mides >= 10] %>%
     values = c("Highlight" = "#E74C3C", "Other" = "#2C3E50")
   ) +
   labs(
-    x = "Share of Local Spending (MIDES)",
-    y = "Share of Local Spending (Federal)",
+    x = "Share of Local Suppliers (MIDES)",
+    y = "Share of Local Suppliers (Federal)",
   ) +
   theme_classic(base_size = 14) +   # increase base font size
   theme(
@@ -226,15 +226,16 @@ m2 = feols(same_municipality ~ municipal | modality_group + id_municipio,
            cluster = ~id_municipio^municipal)
 
 etable( m1, m2)
+fixest::setFixest_etable(digits.stats = 2)
 etable(m1, m2,
-       tex = TRUE, 
-       file = paste0(path_figures, "/regression_home_bias.tex"),
        dict = c("same_municipality" = "Share Local Suppliers",
                 "municipal" = "Municipal buyer", 
                 "modality_group" = "Modality", 
                 "id_municipio" = "Municipality"),
-       fitstat = ~ n + r2 + my,
-       notes = )
+       fitstat = c("n", "my", "rmse", "r2", "ar2"),
+       digits = 3,
+       tex = TRUE, 
+       file = paste0(path_figures, "/regression_home_bias.tex"))
 
 ##### APPENDIX TABLE: WEIGHTED
 m1_w = feols(same_municipality ~ municipal,
