@@ -12,7 +12,8 @@ library(readr)
 library(data.table)
 library(tibble)
 library(patchwork)
-
+library(fixest)
+library(DescTools)
 
 ################### 0. EXTRACT FROM BQ #####################
 
@@ -491,11 +492,12 @@ data_munic = fread(file.path(raw_dir, "full_budget_execution_index.csv"),
                    showProgress = TRUE,
                    encoding = "Latin-1")
 regressions = participante_cnpj[vencedor == 1] %>% 
+  mutate(sum_item_value_winsor =  Winsorize(sum_item_value, val = quantile(sum_item_value, probs = c(0,.99), na.rm = T))) %>% 
   left_join(data_munic %>% select(year, municipality, gdp, population), 
             by = c("ano" = 'year',
                    'id_municipio' = 'municipality'))
 
-
+#### MAIN SPECIFICATION UNWEIGHTED
   # Define regression models
   reg_models <- list(
     same_municipality   ~ log(gdp) + log(population)  + licitacao_discricionaria,
@@ -509,7 +511,7 @@ regressions = participante_cnpj[vencedor == 1] %>%
   
   # Variable names and descriptions
   dict <- c(
-    "same_municipality" = "\\% Local Suppliers",
+    "same_municipality" = "Dummy Local Supplier",
     "log(gdp)" = "ln(GDP)",
     "log(population)" = "ln(Population)",
     "licitacao_discricionaria" = "Non-Competitive Tenders",
@@ -528,7 +530,28 @@ fixest::etable(
     dict = dict,
     file = paste0(path_figures, "/reg_home_bias_correlates.tex")
   )
-  
+
+
+#### APPENDIX: WEIGHTED VERSION
+# Define regression models
+
+# Run regression for each model
+reg_results_w <- lapply(reg_models, function(model) fixest::feols(model, data = regressions[sum_item_value > 0], 
+                                                                cluster = ~ id_municipio,
+                                                                weight = ~ sum_item_value_winsor))
+
+# Create tables
+fixest::setFixest_etable(digits.stats = 2, drop = c("Constant"))
+fixest::etable(
+  reg_results_w,
+  title = "Correlations",
+  fitstat = c("n", "my", "rmse", "r2", "ar2"),
+  digits = 3,
+  tex = TRUE,
+  dict = dict,
+  file = paste0(path_figures, "/reg_home_bias_correlates_weighted.tex")
+)
+
 
   
 
