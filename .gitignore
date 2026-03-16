@@ -16,7 +16,7 @@ __pycache__/
 .ipynb_checkpoints/
 *.egg-info/
 dist/
-build/
+/build/
 .env
 .venv/
 venv/
