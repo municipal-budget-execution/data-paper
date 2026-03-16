@@ -27,10 +27,11 @@ Outputs are written to `output/figures/` and `output/tables/`.
 | Purpose | Packages |
 |---|---|
 | Data manipulation | `data.table`, `dplyr` |
-| Figures | `ggplot2`, `ggpubr`, `ggtext` |
+| Figures | `ggplot2`, `ggpubr`, `ggtext`, `ggrepel` |
 | Maps | `sf`, `geobr` |
-| Econometrics | `fixest`, `binsreg` |
-| Tables | `kableExtra`, `tinytex` |
+| Econometrics | `fixest`, `binsreg`, `rdrobust` |
+| Tables | `kableExtra`, `modelsummary`, `tinytex` |
+| Data I/O | `readxl`, `haven`, `janitor` |
 
 LaTeX (e.g. TinyTeX via `tinytex::install_tinytex()`) is required to compile the regression table PDFs.
 
@@ -76,57 +77,87 @@ MiDES-data-paper-repository/
 
 ## Figure and table → script mapping
 
-### Figures
+### Main paper figures
 
-| Figure | Description | Script |
+| Figure | Output filename | Script |
 |---|---|---|
-| Fig 1 | Coverage map | *manually created* |
-| Fig 2 | Procurement process diagram | *manually created* |
-| Fig 3 | Validation — commitment | `code/analysis/fig_validation_siconfi.R` |
-| Fig 4 | Validation — verification | `code/analysis/fig_validation_siconfi.R` |
-| Fig 5 | Validation — payment | `code/analysis/fig_validation_siconfi.R` |
-| Fig 6 | Home bias: competitive vs. non-competitive | `code/analysis/fig_home_bias.R` |
-| Fig 7 | Home bias: by tender type | `code/analysis/fig_home_bias.R` |
-| Fig 8 | Home bias: by population size | `code/analysis/fig_home_bias.R` |
-| Fig 9 | Distribution of payment delays | `code/analysis/fig_delay_payment.R` |
-| Fig 10 | Map: weighted average payment delay (2018) | `code/analysis/fig_delay_maps.R` |
-| Fig 11 | Scatter: payment delay vs. GDP per capita | `code/analysis/fig_scatter_delay_gdp.R` |
-| Fig A1 | Validation — commitment by function | `code/analysis/fig_validation_siconfi.R` |
-| Fig A2 | Validation — verification by function | `code/analysis/fig_validation_siconfi.R` |
-| Fig A3 | Validation — payment by function | `code/analysis/fig_validation_siconfi.R` |
-| Fig A4 | Validation — payment across years (PR, MG) | `code/analysis/fig_validation_siconfi.R` |
-| Fig A5 | Map: share of payments > 30 days (2018) | `code/analysis/fig_delay_maps.R` |
-| Fig A6 | CDF of late payments across years | `code/analysis/fig_delay_payment.R` |
-| Fig A7 | Histogram: non-competitive tender share | `code/analysis/fig_noncompetitive_hist.R` |
-| Fig B1 | Missing tender identifiers | `code/analysis/fig_null_ids.R` |
-| Fig B2 | Missing commitment identifiers | `code/analysis/fig_null_ids.R` |
-| Fig B3 | Missing verification identifiers | `code/analysis/fig_null_ids.R` |
-| Fig B4 | Missing payment identifiers | `code/analysis/fig_null_ids.R` |
-| Fig B5 | Missing municipalities: procurement | `code/analysis/fig_missing_municipalities.R` |
-| Fig B6 | Missing municipalities: budget execution | `code/analysis/fig_missing_municipalities.R` |
-| Fig B7 | Municipality count: commitments | `code/analysis/fig_total_municipalities.R` |
-| Fig B8 | Municipality count: verifications | `code/analysis/fig_total_municipalities.R` |
-| Fig B9 | Municipality count: payments | `code/analysis/fig_total_municipalities.R` |
+| Fig 1 | `Dahis Fig 1.png` | *manually created* |
+| Fig 2 | `Dahis Fig 2.pdf` | *manually created* |
+| Fig 3 | `Dahis Fig 3.pdf` | `code/analysis/fig_validation_siconfi.R` |
+| Fig 4 | `Dahis Fig 4.pdf` | `code/analysis/fig_validation_siconfi.R` |
+| Fig 5 | `Dahis Fig 5.pdf` | `code/analysis/fig_validation_siconfi.R` |
+| Fig 6a, 6b | `Dahis Fig 6a.png`, `Dahis Fig 6b.png` | `code/analysis/fig_waiver_thresholds.R` |
+| Fig 7 | `Dahis Fig 7.png` | `code/analysis/fig_home_bias.R` |
+| Fig 8 | `Dahis Fig 8.png` | `code/analysis/fig_home_bias_federal.R` |
+| Fig 9a, 9b | `Dahis Fig 9a.png`, `Dahis Fig 9b.png` | `code/analysis/fig_delay_payment.R` |
+| Fig 10 | `Dahis Fig 10.png` | `code/analysis/fig_delay_maps.R` |
+| Fig 11 | `Dahis Fig 11.png` | `code/analysis/fig_scatter_delay_gdp.R` |
+| Fig 12a, 12b | `Dahis Fig 12a.pdf`, `Dahis Fig 12b.pdf` | `code/analysis/fig_rdd_mayors.R` ¹ |
 
-### Tables
+### Appendix figures
 
-| Table | Description | Script |
+| Figure | Output filename | Script |
 |---|---|---|
-| Tab 1 | Procurement and budget execution coverage | *manually created* |
-| Tab 2 | Descriptive statistics — procurement | `code/analysis/tab_descriptive_procurement.R` |
-| Tab 3 | Descriptive statistics — budget execution | `code/analysis/tab_descriptive_execution.R` |
-| Tab 4 | Correlates of payment delays | `code/analysis/tab_regressions_delay.R` |
-| Tab 5 | Correlates of SICONFI deviations | `code/analysis/tab_regressions_delay.R` |
-| Tab A1 | Procurement and budget execution sources | *manually created* |
-| Tab A2 | Procurement methods | *manually created* |
-| Tab B1 | Limitations — budget execution | *manually created* |
-| Tab B2 | Limitations — procurement | *manually created* |
-| — | Municipality descriptive statistics | `code/analysis/tab_descriptive_municipalities.R` |
-| — | Home bias regressions | `code/analysis/tab_regressions_home_bias.R` |
+| Fig A1 | `validation_siconfi_commitment_function.pdf` | `code/analysis/fig_validation_siconfi.R` |
+| Fig A2 | `validation_siconfi_verification_function.pdf` | `code/analysis/fig_validation_siconfi.R` |
+| Fig A3 | `validation_siconfi_payment_function.pdf` | `code/analysis/fig_validation_siconfi.R` |
+| Fig A4 | `validation_siconfi_payment_pr.pdf`, `_mg.pdf` | `code/analysis/fig_validation_siconfi.R` |
+| Fig A5 | `over30_delay_2018.png` | `code/analysis/fig_delay_maps.R` |
+| Fig A6 | `cdf_years_over_30days.jpeg` | `code/analysis/fig_delay_payment.R` |
+| Fig A7 | `histogram_noncompetitive.png` | `code/analysis/fig_noncompetitive_hist.R` |
+| Appendix: home bias by type (unweighted) | `home_bias_by_type_unw.png` | `code/analysis/fig_home_bias.R` |
+| Appendix: home bias by population (unweighted) | `home_bias_population_unw.png` | `code/analysis/fig_home_bias.R` |
+| Appendix: home bias scatter vs. population | `home_bias_population_scatter.png` | `code/analysis/fig_home_bias.R` |
+| Appendix: home bias by state (weighted) | `home_bias_by_state_weighted.png` | `code/analysis/fig_home_bias_federal.R` |
+| Appendix: home bias by type (weighted) | `home_bias_by_type_weighted.png` | `code/analysis/fig_home_bias_federal.R` |
+| Appendix: home bias by population (weighted) | `home_bias_population_weighted.png` | `code/analysis/fig_home_bias_federal.R` |
+| Appendix: home bias scatter both | `home_bias_population_scatter_both.png` | `code/analysis/fig_home_bias_federal.R` |
+| Appendix: federal vs. municipal scatter (weighted) | `scatter_federal_localpurchase_weighted.png` | `code/analysis/fig_home_bias_federal.R` |
+| Appendix: waiver distribution (federal tenders) | `distribution_tender_federal.png` | `code/analysis/fig_waiver_thresholds.R` |
+| Appendix: waiver distribution (federal items) | `distribution_items_federal.png` | `code/analysis/fig_waiver_thresholds.R` |
+| Appendix: expenditure composition | `composition_levels_expenditures.png` | `code/analysis/fig_expenditure_composition.R` ¹ |
+| Fig B1–B4 | `proporcao_nulos_*.pdf` | `code/analysis/fig_null_ids.R` |
+| Fig B5 | `missing_municipalities_procurement.pdf` | `code/analysis/fig_missing_municipalities.R` |
+| Fig B6 | `missing_municipalities_budget_sample.pdf` | `code/analysis/fig_missing_municipalities.R` |
+| Fig B7 | `total_municipalities_commitment.pdf` | `code/analysis/fig_total_municipalities.R` |
+| Fig B8 | `total_municipalities_verification.pdf` | `code/analysis/fig_total_municipalities.R` |
+| Fig B9 | `total_municipalities_payment.pdf` | `code/analysis/fig_total_municipalities.R` |
+
+### Main paper tables
+
+| Table | Output filename | Script |
+|---|---|---|
+| Tab 1 | `coverage_table.tex` | *manually created* |
+| Tab 2 | `descriptive_statistics_municipalities.tex` | `code/analysis/tab_descriptive_municipalities.R` |
+| Tab 3 | `descriptive_statistics_procurement.tex` | `code/analysis/tab_descriptive_procurement.R` |
+| Tab 4 | `descriptive_statistics_budget_execution.tex` | `code/analysis/tab_descriptive_execution.R` |
+| Tab 5 | `reg_home_bias_correlates.tex` → `output/figures/` | `code/analysis/tab_regressions_home_bias.R` |
+| Tab 6 | `regression_home_bias.tex` → `output/figures/` | `code/analysis/fig_home_bias_federal.R` |
+| Tab 7 | `table_reg_4_columns.tex` | `code/analysis/tab_regressions_delay.R` |
+| Tab 8 | `RDD_mayors.tex` | `code/analysis/fig_rdd_mayors.R` ¹ |
+
+### Appendix tables
+
+| Table | Output filename | Script |
+|---|---|---|
+| Appendix: UASG esferas | `uasg_esferas.tex` | `code/analysis/tab_uasg_esferas.R` |
+| Appendix: municipalities by state | `descriptive_statistics_municipalities_by_state.tex` | `code/analysis/tab_descriptive_municipalities.R` |
+| Appendix: home bias correlates (weighted) | `reg_home_bias_correlates_weighted.tex` → `output/figures/` | `code/analysis/fig_home_bias_federal.R` |
+| Appendix: home bias regression (weighted) | `regression_home_bias_weighted.tex` → `output/figures/` | `code/analysis/fig_home_bias_federal.R` |
+| Appendix: SICONFI deviations | `reg_deviations.tex` | `code/analysis/tab_regressions_delay.R` |
+| Appendix: data sources | `data_sources.tex` | *manually created* |
+| Appendix: budget execution limitations | `limitations_budget_execution.tex` | *manually created* |
+| Appendix: procurement limitations | `limitations_procurement.tex` | *manually created* |
+
+> **Note:** Some regression tables (`reg_home_bias_correlates.tex`, `regression_home_bias.tex`, `reg_home_bias_correlates_weighted.tex`, `regression_home_bias_weighted.tex`) are written to `output/figures/` rather than `output/tables/` because the paper's master `.tex` file reads them via `\input{figures/...}`.
+
+¹ Scripts marked with ¹ require intermediate data files not re-created by `--redownload`. See **Intermediate data** below.
 
 ---
 
 ## Data
+
+### Raw input data
 
 The processed input CSVs are stored in Dropbox at `MiDES-data-paper-replication/Data/Raw/` and are **not committed to this repository**.
 
@@ -143,6 +174,25 @@ Raw data is collected from 7 Brazilian State Audit Courts (TCEs):
 | SP | https://transparencia.tce.sp.gov.br/conjunto-de-dados |
 
 Harmonized versions of these tables are hosted on [Base dos Dados](https://basedosdados.org) in Google BigQuery (`basedosdados.world_wb_mides.*`). The `--redownload` flag in `main.sh` re-fetches them via `code/build/ingest_bigquery.R`.
+
+### Intermediate data
+
+Several scripts require pre-built files in `Data/Intermediate/` that are not in `Data/Raw/` and not rebuilt by `--redownload`. These must be present on the machine:
+
+| File | Required by |
+|---|---|
+| `Transparency_Federal_2021/licitacoes_2021.csv` | `fig_waiver_thresholds.R` |
+| `Transparency_Federal_2021/licitacoes_items_2021.csv` | `fig_waiver_thresholds.R` |
+| `Transparency_Federal_2021/licitacoes_2021.rds` | `fig_home_bias_federal.R` |
+| `Transparency_Federal_2021/licitacoes_items_2021.rds` | `fig_home_bias_federal.R` |
+| `Transparency_Federal_2021/suppliers_munic_federal.csv` | `fig_home_bias_federal.R` |
+| `Transparency_Federal_2021/mides_2021_items_alternative_price.csv` | `fig_home_bias_federal.R` |
+| `mayors.dta` | `fig_rdd_mayors.R` (Fig 12, Tab 8) |
+| `2018XX_Despesas.csv` (12 monthly files) | `fig_expenditure_composition.R` |
+| `finbra_state_elemento.csv` | `fig_expenditure_composition.R` |
+| `finbra_municipality_elemento.csv` | `fig_expenditure_composition.R` |
+
+If any of these files are absent, `main.sh` skips the affected scripts with a clear warning and continues with the remaining outputs.
 
 ---
 
@@ -170,3 +220,6 @@ PE's original data does not provide unique identifiers sufficient to construct `
 
 **Why is São Paulo not in the procurement analysis?**
 SP provides procurement data only from 2018 onward, so it is excluded from the procurement sample.
+
+**Why do some regression tables go to `output/figures/` instead of `output/tables/`?**
+The paper's master `.tex` file reads certain regression tables via `\input{figures/...}`. These scripts write directly to `output/figures/` to match that convention.
