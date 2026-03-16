@@ -53,7 +53,8 @@ fixest::setFixest_etable(digits.stats = 2, drop = c("Constant"))
 
 table_4 <- fixest::etable(reg_results[seq(2, 8, by = 2)],
                           fitstat = c("n", "my", "rmse", "r2", "ar2"),
-                          digits = 3, tex = TRUE, dict = dict)
+                          digits = 3, tex = TRUE, dict = dict,
+                          style.tex = style.tex(signif.code = NA, notes.intro = ""))
 table_4 <- c(table_4[1:10], "\\\\",
              "  Year Fixed Effects  & \\checkmark  & \\checkmark   & \\checkmark  & \\checkmark \\\\ ",
              "  State Fixed Effects   & \\checkmark  & \\checkmark   & \\checkmark  & \\checkmark\\\\",
@@ -99,7 +100,8 @@ fixest::setFixest_etable(digits.stats = 2, drop = c("Constant"))
 table_5 <- fixest::etable(reg_results_5,
                           title   = "Correlation of deviations in percentage points from Treasury Data",
                           fitstat = c("n", "my", "rmse", "r2", "ar2"),
-                          digits  = 3, tex = TRUE, dict = dict_5)
+                          digits  = 3, tex = TRUE, dict = dict_5,
+                          style.tex = style.tex(signif.code = NA, notes.intro = ""))
 
 table_5 <- c(
   table_5[1:6],

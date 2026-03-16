@@ -41,7 +41,8 @@ fixest::setFixest_etable(digits.stats = 2, drop = c("Constant"))
 table_hb <- fixest::etable(reg_results,
                            title   = "Correlations",
                            fitstat = c("n", "my", "rmse", "r2", "ar2"),
-                           digits  = 3, tex = TRUE, dict = dict)
+                           digits  = 3, tex = TRUE, dict = dict,
+                           style.tex = style.tex(signif.code = NA, notes.intro = ""))
 
 table_hb <- c(
   table_hb[1:6],
