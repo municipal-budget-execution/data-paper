@@ -2,7 +2,7 @@
 
 ## Goal
 
-Transform a flat, loosely-organized collection of R scripts and Jupyter notebooks into a clean replication package suitable for journal publication, following best practices for research code reproducibility.
+Transform a flat, loosely-organized collection of R scripts and Jupyter notebooks into a clean, fully-R replication package suitable for journal publication, following best practices for research code reproducibility.
 
 **Non-goal**: change any analysis results. All outputs must match the accepted submission exactly.
 
@@ -15,79 +15,102 @@ MiDES-data-paper-repository/
 ├── CLAUDE.md                          ← AI instructions
 ├── README.md                          ← human overview (update existing)
 ├── plan.md                            ← this file
-├── .gitignore                         ← updated
-├── master.R                           ← orchestrates all R scripts
-├── master.ipynb                       ← orchestrates all Python notebooks
+├── .gitignore
+├── main.sh                            ← single entry point: clears output, runs everything
 │
 ├── code/
-│   ├── build/                         ← data extraction (not part of reproducibility core)
-│   │   ├── API_ComprasDados/          ← federal API extraction scripts (move from root)
+│   ├── build/                         ← data ingestion from BigQuery/APIs
+│   │   ├── ingest_bigquery.R          ← consolidates all BigQuery queries
+│   │   ├── API_ComprasDados/          ← federal ComprasDados API scripts
 │   │   │   ├── Extract_Licitacoes.R
 │   │   │   ├── Extract_Pregoes.R
 │   │   │   ├── Extract_UASG.R
 │   │   │   ├── Extract_NonCompetitive.R
 │   │   │   ├── AppendTransparencyData.R
 │   │   │   └── BuildHomeBiasFederalEntities.R
-│   │   └── queries/                   ← BigQuery query scripts (move from root)
+│   │   └── queries/                   ← individual BigQuery query scripts
 │   │       ├── Query_HomeBias.R
 │   │       ├── Query_FederalComparison.R
 │   │       └── Extract_Items_Mides.R
 │   │
-│   ├── analysis/                      ← one script per table/figure group
-│   │   ├── R/
-│   │   │   ├── fig_delay_payment.R        ← Fig 9, Fig A6        (from fig_reg_delay_payment.R)
-│   │   │   ├── fig_scatter_delay_gdp.R    ← Fig 11               (split from fig_reg_delay_payment.R)
-│   │   │   ├── fig_noncompetitive_hist.R  ← Fig A7               (from example_paper.R)
-│   │   │   ├── tab_regressions_delay.R    ← Tab 4, Tab 5         (split from fig_reg_delay_payment.R)
-│   │   │   └── tab_regressions_home_bias.R ← Home bias tables    (from home_bias_regressions.R)
-│   │   └── python/
-│   │       ├── fig_validation_siconfi.ipynb      ← Fig 3–5, A1–A4
-│   │       ├── fig_home_bias.ipynb               ← Fig 6–8
-│   │       ├── fig_delay_maps.ipynb              ← Fig 10, A5
-│   │       ├── fig_null_ids.ipynb                ← Fig B1–B4
-│   │       ├── fig_missing_municipalities.ipynb  ← Fig B5–B6
-│   │       ├── fig_total_municipalities.ipynb    ← Fig B7–B9
-│   │       ├── tab_descriptive_procurement.ipynb ← Tab 2
-│   │       └── tab_descriptive_execution.ipynb   ← Tab 3
+│   ├── analysis/                      ← one R script per figure/table group
+│   │   ├── fig_validation_siconfi.R   ← Fig 3–5, A1–A4  (converted from .ipynb)
+│   │   ├── fig_home_bias.R            ← Fig 6–8          (converted from .ipynb)
+│   │   ├── fig_delay_payment.R        ← Fig 9, Fig A6    (from fig_reg_delay_payment.R)
+│   │   ├── fig_delay_maps.R           ← Fig 10, A5       (converted from .ipynb)
+│   │   ├── fig_scatter_delay_gdp.R    ← Fig 11           (split from fig_reg_delay_payment.R)
+│   │   ├── fig_noncompetitive_hist.R  ← Fig A7           (from example_paper.R)
+│   │   ├── fig_null_ids.R             ← Fig B1–B4        (converted from .ipynb)
+│   │   ├── fig_missing_municipalities.R ← Fig B5–B6      (converted from .ipynb)
+│   │   ├── fig_total_municipalities.R   ← Fig B7–B9      (converted from .ipynb)
+│   │   ├── tab_descriptive_municipalities.R ← Tab 1 descriptives (converted from .ipynb)
+│   │   ├── tab_descriptive_procurement.R    ← Tab 2      (converted from .ipynb)
+│   │   ├── tab_descriptive_execution.R      ← Tab 3      (converted from .ipynb)
+│   │   ├── tab_regressions_delay.R          ← Tab 4, 5  (split from fig_reg_delay_payment.R)
+│   │   └── tab_regressions_home_bias.R      ← Home bias tables (from home_bias_regressions.R)
 │   │
 │   └── utils/                         ← shared helpers
 │       ├── paths.R                    ← centralised path config (extract from master.R)
+│       ├── packages.R                 ← single place to declare all required packages
 │       ├── set_theme_ggplots.R        ← move from Functions/
 │       └── pdf_table.R                ← move from Functions/
 │
+├── code/archive/                      ← exploratory scripts not producing paper outputs
+│
 └── docs/
-    └── documentation_in_portuguese.pdf   ← move from root
+    └── documentation_in_portuguese.pdf
 ```
 
-Files **to archive / not migrate** (exploratory/diagnostic, not part of paper):
-- `202510_MIDES_HomeBias.r` — recent exploratory script, not producing paper outputs
-- `ChecksParana_CommitmentTender.R` — data quality checks, not paper outputs
-- `ExamplesParanaMultipleCommitments.R` — example analysis, not paper outputs
-- `Deviations_SICONFI_Compras.R` — diagnostic, not directly producing paper tables
+Files **to archive** (exploratory/diagnostic, not producing paper outputs):
+- `202510_MIDES_HomeBias.r` — recent exploratory work
+- `ChecksParana_CommitmentTender.R` — data quality checks
+- `ExamplesParanaMultipleCommitments.R` — example analysis
+- `Deviations_SICONFI_Compras.R` — diagnostic
 - `Aux_API_PNCP.R` — auxiliary API helper
 - `WordCloud_Mides.R`, `WordCloud_Fed.R` — exploratory
-- `Figure_ElectronicAuction.R` — unclear if in paper
-- `ComparisonMIDES_Federal.do`, `Table_Uasg_comprasdados.do`, `Figure_Elemento.do` — Stata scripts; verify if any produce paper outputs
-- `Download_comprasdados.ipynb` — data ingestion (build step, not analysis)
+- `Figure_ElectronicAuction.R` — not in final paper (verify)
+- `ComparisonMIDES_Federal.do`, `Table_Uasg_comprasdados.do`, `Figure_Elemento.do` — Stata; verify outputs before archiving
+- All `.ipynb` files (replaced by R scripts)
 
-These go to `code/archive/` so nothing is deleted.
+---
+
+## `main.sh` — the single entry point
+
+`main.sh` is the **only file a replicator needs to run**. It:
+
+1. Parses a `--redownload` flag (default: `false`)
+2. If `--redownload=true`: runs `code/build/ingest_bigquery.R` (requires BigQuery auth)
+3. Clears `output/figures/` and `output/tables/`
+4. Runs every analysis script in `code/analysis/` in the correct order via `Rscript`
+5. Prints a completion summary
+
+```bash
+# Usage
+bash main.sh               # use existing data, regenerate all outputs
+bash main.sh --redownload  # re-fetch data from BigQuery first, then regenerate
+```
+
+The `--redownload` flag is `false` by default because:
+- The processed input CSVs are included with the replication package (or retrievable from the data repository)
+- BigQuery access requires a Google Cloud project and `basedosdados` credentials
+- Most replicators will just want to verify the analysis, not re-pull raw data
 
 ---
 
 ## Step-by-step execution plan
 
-### Phase 1 — Scaffolding (done in this session)
-- [x] Create backup: `MiDES-data-paper-repository-backup-YYYYMMDD`
+### Phase 1 — Scaffolding ✅ done
+- [x] Create backup: `MiDES-data-paper-repository-backup-20260316`
 - [x] Checkout branch: `refactor/clean-structure`
 - [x] Update `.gitignore`
 - [x] Create `CLAUDE.md`
 - [x] Create `plan.md` (this file)
-- [ ] Commit: `chore: add CLAUDE.md, plan.md, updated .gitignore`
+- [x] Commit: `chore: add CLAUDE.md, plan.md, updated .gitignore`
 
 ### Phase 2 — Create directory skeleton
 - [ ] Create `code/build/API_ComprasDados/`, `code/build/queries/`
-- [ ] Create `code/analysis/R/`, `code/analysis/python/`
-- [ ] Create `code/utils/`, `code/archive/`, `docs/`
+- [ ] Create `code/analysis/`, `code/utils/`, `code/archive/`, `docs/`
+- [ ] Add `.gitkeep` in each empty directory
 - [ ] Commit: `chore: create directory skeleton`
 
 ### Phase 3 — Move non-analysis scripts
@@ -96,74 +119,102 @@ These go to `code/archive/` so nothing is deleted.
 - [ ] Move `Functions/set_theme_ggplots.R`, `Functions/pdf_table.R` → `code/utils/`
 - [ ] Move `documentation_in_portuguese.pdf` → `docs/`
 - [ ] Move exploratory/diagnostic scripts → `code/archive/`
+- [ ] Remove now-empty `Functions/` directory
 - [ ] Commit: `refactor: move build, utils, and archive scripts to subdirectories`
 
-### Phase 4 — Extract paths into utils/paths.R
-- [ ] Create `code/utils/paths.R` with the multi-user path logic from `master.R`
-- [ ] Update `master.R` to `source("code/utils/paths.R")` instead of inline logic
-- [ ] Commit: `refactor: extract path configuration to code/utils/paths.R`
+### Phase 4 — Create shared utilities
+- [ ] Create `code/utils/paths.R`: extract multi-user path logic from `master.R`; define `input`, `graph_output`, `table_output`, `function_code`
+- [ ] Create `code/utils/packages.R`: declare all required R packages in one place; use `pacman::p_load()`
+- [ ] Commit: `refactor: extract shared utilities (paths, packages) to code/utils/`
 
-### Phase 5 — Split and move R analysis scripts
+### Phase 5 — Split and refactor existing R analysis scripts
 
-For each script below, the work is:
-1. Copy to new location with new name
-2. Add `source()` for `code/utils/paths.R` and `code/utils/set_theme_ggplots.R` at the top
-3. Remove any global-state dependencies (inline the data loading needed)
-4. Run it end-to-end and verify outputs match paper
+For each script:
+1. Place in `code/analysis/` with new name
+2. Add `source(here::here("code/utils/paths.R"))` at top (use `here` package for portability)
+3. Make self-contained: load its own data, produce its own outputs, save to `graph_output` / `table_output`
+4. Run end-to-end and verify outputs match paper
 
-Scripts to split/move:
-- `fig_reg_delay_payment.R` → three scripts:
-  - `code/analysis/R/fig_delay_payment.R` (Fig 9, Fig A6)
-  - `code/analysis/R/fig_scatter_delay_gdp.R` (Fig 11)
-  - `code/analysis/R/tab_regressions_delay.R` (Tab 4, Tab 5)
-- `example_paper.R` → `code/analysis/R/fig_noncompetitive_hist.R` (Fig A7)
-- `home_bias_regressions.R` → `code/analysis/R/tab_regressions_home_bias.R`
-- [ ] Commit each split separately: `refactor: split fig_reg_delay_payment.R into atomic scripts`
+Splits:
+- `fig_reg_delay_payment.R` → **three** scripts:
+  - `code/analysis/fig_delay_payment.R` — Fig 9, Fig A6
+  - `code/analysis/fig_scatter_delay_gdp.R` — Fig 11
+  - `code/analysis/tab_regressions_delay.R` — Tab 4, Tab 5
+- `example_paper.R` → `code/analysis/fig_noncompetitive_hist.R` — Fig A7
+- `home_bias_regressions.R` → `code/analysis/tab_regressions_home_bias.R`
 
-### Phase 6 — Rename and move Python notebooks
+- [ ] Commit per script: `refactor: add code/analysis/<script_name>.R`
 
-Rename for clarity and move to `code/analysis/python/`:
-- `validation_siconfi_execution.ipynb` → `fig_validation_siconfi.ipynb`
-- `home_bias_firms_characteristics.ipynb` → `fig_home_bias.ipynb`
-- `delay_payment_maps.ipynb` → `fig_delay_maps.ipynb`
-- `null_ids.ipynb` → `fig_null_ids.ipynb`
-- `missing_municipalities.ipynb` → `fig_missing_municipalities.ipynb`
-- `total_municipalities.ipynb` → `fig_total_municipalities.ipynb`
-- `descriptive_statistics_procurement.ipynb` → `tab_descriptive_procurement.ipynb`
-- `descriptive_statistics_execution.ipynb` → `tab_descriptive_execution.ipynb`
-- `descriptive_statistics_municipalities.ipynb` → `tab_descriptive_municipalities.ipynb`
+### Phase 6 — Convert Python notebooks to R
 
-Move data ingestion to build:
-- `Download_comprasdados.ipynb` → `code/build/Download_comprasdados.ipynb`
+Each notebook becomes a self-contained R script. For the conversion:
+- Use `data.table` / `dplyr` for data manipulation (replacing `pandas`)
+- Use `ggplot2` for all plots (replacing `matplotlib` / `seaborn`)
+- Use `sf` + `ggplot2` for maps (replacing `geopandas`)
+- Use `modelsummary` / `kableExtra` for tables (replacing `stargazer` or manual LaTeX)
+- Apply the shared theme from `code/utils/set_theme_ggplots.R`
 
-- [ ] Commit: `refactor: rename and move Python notebooks to code/analysis/python/`
+Conversions (notebook → R script):
 
-### Phase 7 — Update master files
-- [ ] Update `master.R` to source scripts from their new locations
-- [ ] Update `master.ipynb` to reference notebooks from their new locations
-- [ ] Commit: `refactor: update master files to reference new script locations`
+| Notebook | R script | Outputs |
+|---|---|---|
+| `validation_siconfi_execution.ipynb` | `fig_validation_siconfi.R` | Fig 3–5, A1–A4 |
+| `home_bias_firms_characteristics.ipynb` | `fig_home_bias.R` | Fig 6–8 |
+| `delay_payment_maps.ipynb` | `fig_delay_maps.R` | Fig 10, A5 |
+| `null_ids.ipynb` | `fig_null_ids.R` | Fig B1–B4 |
+| `missing_municipalities.ipynb` | `fig_missing_municipalities.R` | Fig B5–B6 |
+| `total_municipalities.ipynb` | `fig_total_municipalities.R` | Fig B7–B9 |
+| `descriptive_statistics_procurement.ipynb` | `tab_descriptive_procurement.R` | Tab 2 |
+| `descriptive_statistics_execution.ipynb` | `tab_descriptive_execution.R` | Tab 3 |
+| `descriptive_statistics_municipalities.ipynb` | `tab_descriptive_municipalities.R` | Tab descriptives |
 
-### Phase 8 — Run and verify
-- [ ] Run `master.R` end-to-end; compare all R outputs against submission files
-- [ ] Run `master.ipynb` end-to-end; compare all Python outputs against submission files
+For each conversion:
+1. Read the notebook carefully to understand the full logic
+2. Write the R script with equivalent logic
+3. Run against the same input data
+4. Visually compare output against the accepted paper figures/tables
+5. Iterate until identical
+
+- [ ] Commit per conversion: `feat: convert <notebook_name> to R`
+
+### Phase 7 — Write `main.sh`
+- [ ] Write `main.sh` with `--redownload` flag logic
+- [ ] Wire all analysis scripts in the correct dependency order
+- [ ] Test full run end-to-end
+- [ ] Commit: `feat: add main.sh single entry point`
+
+### Phase 8 — Remove old master files and retire notebooks
+- [ ] Delete `master.R`, `master.ipynb` (replaced by `main.sh`)
+- [ ] Move all `.ipynb` files to `code/archive/` (originals, for reference)
+- [ ] Commit: `refactor: retire master.R, master.ipynb, and original notebooks`
+
+### Phase 9 — Run full verification
+- [ ] Run `bash main.sh` end-to-end from a clean output directory
+- [ ] Diff every output file against `../MiDES-data-paper-replication/WBER_Submission/FinalSubmission/figures/` and `tables/`
 - [ ] Fix any discrepancies
-- [ ] Commit: `test: verify all outputs match submission after refactoring`
+- [ ] Commit: `test: full end-to-end verification pass`
 
-### Phase 9 — Update README
-- [ ] Rewrite README.md to reflect new structure
-- [ ] Update the table/figure → file mapping table
-- [ ] Commit: `docs: update README for new structure`
+### Phase 10 — Update README
+- [ ] Rewrite README.md: structure, requirements (R only, no Python), `main.sh` usage, BigQuery setup for `--redownload`
+- [ ] Update table/figure → script mapping
+- [ ] Commit: `docs: rewrite README for final replication package`
 
 ---
 
 ## Key design decisions
 
-1. **Build vs Analysis separation**: Scripts that download/extract data from BigQuery or APIs are `build`. Scripts that load already-processed data to produce paper outputs are `analysis`. The replication package reviewer only needs to run `analysis`.
+1. **R only**: All analysis code in R. No Python or Jupyter dependency for replicators. Eliminates the Python environment setup burden. Python notebooks moved to `code/archive/` for reference.
 
-2. **One output per script**: Each analysis script produces one figure or one table (or a tightly related group like Fig 3–5 which come from one notebook). This makes it easy to trace paper outputs to code.
+2. **One button**: `bash main.sh` is the entire interface. Clear outputs, run, done. No mental overhead about which script to run first.
 
-3. **Self-contained scripts**: Each analysis script sources `code/utils/paths.R` and loads its own data. No global state from master files flows into analysis scripts.
+3. **Re-download flag**: `--redownload` flag (default: false) gates the BigQuery data pull. Standard replication uses the provided processed CSVs. Advanced users who want to re-pull raw data can pass `--redownload` after setting up BigQuery credentials.
 
-4. **Nothing deleted**: Exploratory and diagnostic scripts move to `code/archive/` so the git history is clean and nothing is lost.
+4. **Build vs Analysis separation**: `code/build/` = data ingestion (gated by `--redownload`). `code/analysis/` = the actual analysis. A reviewer can audit analysis without touching build.
 
-5. **Data never in git**: All `.csv`, `.parquet`, etc. stay in Dropbox and are gitignored.
+5. **One output per script**: Each analysis script = one figure or one table group. Easy to trace any paper output to its source.
+
+6. **Self-contained scripts**: Every analysis script sources `code/utils/paths.R`, loads its own data slice, produces its outputs. No shared global state.
+
+7. **Nothing deleted**: Everything not in the analysis pipeline moves to `code/archive/`. Git history is preserved.
+
+8. **Data never in git**: All `.csv`, `.parquet`, etc. stay in Dropbox/data repository and are gitignored.

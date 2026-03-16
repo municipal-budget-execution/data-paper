@@ -16,20 +16,22 @@ MiDES-data-paper-repository/
 ├── README.md                  ← human-readable overview
 ├── plan.md                    ← refactoring plan
 ├── .gitignore
-├── master.R                   ← runs all R analysis scripts
-├── master.ipynb               ← runs all Python analysis notebooks
+├── main.sh                    ← single entry point (bash main.sh [--redownload])
 ├── code/
-│   ├── build/                 ← data extraction / API queries (not part of reproducibility core)
-│   │   └── API_ComprasDados/
-│   ├── analysis/              ← one script per table/figure
-│   │   ├── R/
-│   │   └── python/
-│   └── utils/                 ← shared functions (theming, paths, helpers)
+│   ├── build/                 ← data ingestion from BigQuery/APIs (gated by --redownload)
+│   │   ├── ingest_bigquery.R
+│   │   ├── API_ComprasDados/
+│   │   └── queries/
+│   ├── analysis/              ← one R script per figure/table group
+│   ├── archive/               ← original exploratory scripts, kept for reference
+│   └── utils/                 ← shared functions (paths, packages, theming, helpers)
 └── docs/
     └── documentation_in_portuguese.pdf
 ```
 
 Data files are stored outside the repo (Dropbox) and are **never committed to git**.
+
+**All analysis code is R.** There is no Python or Jupyter dependency. Original notebooks are in `code/archive/`.
 
 ## Paper → code mapping
 
@@ -37,42 +39,55 @@ The paper lives in `../MiDES-data-paper-replication/WBER_Submission/FinalSubmiss
 
 | Output | Script |
 |--------|--------|
-| Fig 3–5, A1–A4 | `code/analysis/python/fig_validation_siconfi.ipynb` |
-| Fig 6–8 | `code/analysis/python/fig_home_bias.ipynb` |
-| Fig 9, A6 | `code/analysis/R/fig_delay_payment.R` |
-| Fig 10, A5 | `code/analysis/python/fig_delay_maps.ipynb` |
-| Fig 11 | `code/analysis/R/fig_scatter_delay_gdp.R` |
-| Fig A7 | `code/analysis/R/fig_noncompetitive_hist.R` |
-| Fig B1–B4 | `code/analysis/python/fig_null_ids.ipynb` |
-| Fig B5–B6 | `code/analysis/python/fig_missing_municipalities.ipynb` |
-| Fig B7–B9 | `code/analysis/python/fig_total_municipalities.ipynb` |
-| Tab 2 | `code/analysis/python/tab_descriptive_procurement.ipynb` |
-| Tab 3 | `code/analysis/python/tab_descriptive_execution.ipynb` |
-| Tab 4–5 | `code/analysis/R/tab_regressions_delay.R` |
-| Home bias regs | `code/analysis/R/tab_regressions_home_bias.R` |
+| Fig 3–5, A1–A4 | `code/analysis/fig_validation_siconfi.R` |
+| Fig 6–8 | `code/analysis/fig_home_bias.R` |
+| Fig 9, A6 | `code/analysis/fig_delay_payment.R` |
+| Fig 10, A5 | `code/analysis/fig_delay_maps.R` |
+| Fig 11 | `code/analysis/fig_scatter_delay_gdp.R` |
+| Fig A7 | `code/analysis/fig_noncompetitive_hist.R` |
+| Fig B1–B4 | `code/analysis/fig_null_ids.R` |
+| Fig B5–B6 | `code/analysis/fig_missing_municipalities.R` |
+| Fig B7–B9 | `code/analysis/fig_total_municipalities.R` |
+| Tab 2 | `code/analysis/tab_descriptive_procurement.R` |
+| Tab 3 | `code/analysis/tab_descriptive_execution.R` |
+| Tab 4–5 | `code/analysis/tab_regressions_delay.R` |
+| Home bias regs | `code/analysis/tab_regressions_home_bias.R` |
+
+## Entry point
+
+```bash
+bash main.sh               # use existing processed data, regenerate all outputs
+bash main.sh --redownload  # re-fetch raw data from BigQuery, then regenerate
+```
+
+`--redownload` requires a configured Google Cloud project and `basedosdados` credentials. Default is false — processed input CSVs are provided with the package.
 
 ## Paths convention
 
-All path configuration lives in `code/utils/paths.R` (R) and the top cell of each notebook (Python). Never hardcode paths in analysis scripts. The master files set `dropbox_dir` and `github_dir` based on `Sys.getenv("USER")`.
+All path configuration lives in `code/utils/paths.R`. Never hardcode paths in analysis scripts. Paths are set based on `Sys.getenv("USER")`.
 
 Key directories:
 - **Input data**: `{dropbox_dir}/Data/Raw/`
-- **Figures output**: `{dropbox_dir}/Output/Figures/`
-- **Tables output**: `{dropbox_dir}/Output/Tables/`
+- **Figures output**: `output/figures/` (relative to repo root, cleared by `main.sh`)
+- **Tables output**: `output/tables/` (relative to repo root, cleared by `main.sh`)
 
 ## Coding conventions
 
-- **R**: use `data.table` for data manipulation, `ggplot2` for figures, `modelsummary` for tables. Load packages via `pacman::p_load()`.
-- **Python**: use `pandas`, `matplotlib`/`seaborn`, standard scientific stack.
-- Each analysis script is self-contained: it loads its own data, produces its output, and saves to the output directory. Do not have scripts depend on global state from other scripts.
-- Use the shared ggplot2 theme from `code/utils/set_theme_ggplots.R` for all R figures.
+- **All code is R.** No Python.
+- Data manipulation: `data.table` (preferred) or `dplyr`
+- Figures: `ggplot2` with the shared theme from `code/utils/set_theme_ggplots.R`
+- Maps: `sf` + `ggplot2`
+- Tables: `modelsummary` or `kableExtra`
+- Package loading: `pacman::p_load()` in `code/utils/packages.R`
+- Each analysis script is self-contained: sources `code/utils/paths.R`, loads its own data, saves outputs. No global state from other scripts.
 
 ## What NOT to do
 
 - Do not commit data files (csv, parquet, dta, xlsx). They live in Dropbox.
-- Do not commit output files (figures, tables). They are generated.
-- Do not change the paper tex files — they live in a separate directory (`MiDES-data-paper-replication`).
+- Do not commit output files (figures, tables). They are generated by `main.sh`.
+- Do not change the paper tex files — they live in `../MiDES-data-paper-replication/`.
 - Do not alter the substance of any analysis. Refactoring is structural only.
+- Do not introduce Python. All code must be R.
 
 ## Verification rule
 
