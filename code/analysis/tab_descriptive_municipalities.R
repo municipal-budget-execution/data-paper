@@ -1,13 +1,12 @@
 # code/analysis/tab_descriptive_municipalities.R
 # Output: Tab 1 (descriptive statistics for municipalities)
-#   Two columns: in-sample vs. outside-sample municipality means.
-#   Also produces a by-state version.
 #
-# Input CSV (pre-downloaded by code/build/ingest_bigquery.R):
-#   municipios.csv
-#   Expected columns: id_municipio, sigla_uf, populacao, pib_per_capita,
-#     mortalidade_infantil, agua_encanada, coleta_lixo, acesso_eletricidade,
-#     receita_total_pc, receita_corrente_pc, receita_tributaria_pc, receita_capital_pc
+# Input CSV: municipios.csv
+# Columns: id_municipio, sigla_uf, populacao_2015, pib_per_capita_2015,
+#   mortalidade_infantil_5_anos_2010, percentual_agua_encanada_2010,
+#   percentual_coleta_lixo_2010, percentual_energia_eletrica_2010,
+#   receitas_totais_per_capita_2015, receitas_correntes_per_capita_2015,
+#   receitas_impostos_locais_per_capita_2015, receitas_capital_per_capita_2015
 
 source(here::here("code/utils/paths.R"))
 source(here::here("code/utils/packages.R"))
@@ -19,51 +18,41 @@ pacman::p_load("kableExtra", install = TRUE, character.only = TRUE)
 mun <- fread(file.path(input, "municipios.csv"))
 
 SAMPLE_STATES <- c("RS", "PR", "SP", "MG", "CE", "PB", "PE")
-
 mun[, in_sample := as.integer(sigla_uf %in% SAMPLE_STATES)]
 
-# ---- Variable definitions ----
+# ---- Variable mapping ----
 
-vars <- c(
-  "populacao",
-  "pib_per_capita",
-  "mortalidade_infantil",
-  "agua_encanada",
-  "coleta_lixo",
-  "acesso_eletricidade",
-  "receita_total_pc",
-  "receita_corrente_pc",
-  "receita_tributaria_pc",
-  "receita_capital_pc"
-)
+vars <- c("populacao_2015", "pib_per_capita_2015",
+          "mortalidade_infantil_5_anos_2010",
+          "percentual_agua_encanada_2010",
+          "percentual_coleta_lixo_2010",
+          "percentual_energia_eletrica_2010",
+          "receitas_totais_per_capita_2015",
+          "receitas_correntes_per_capita_2015",
+          "receitas_impostos_locais_per_capita_2015",
+          "receitas_capital_per_capita_2015")
 
-var_labels <- c(
-  "Population (2015)",
-  "GDP per capita (2015)",
-  "Child mortality under 5 (2010)",
-  "Piped water (\\%, 2010)",
-  "Trash collection (\\%, 2010)",
-  "Electricity access (\\%, 2010)",
-  "Total revenues p.c. (2015)",
-  "Current revenues p.c. (2015)",
-  "Local tax revenues p.c. (2015)",
-  "Capital revenues p.c. (2015)"
-)
+var_labels <- c("Population (2015)",
+                "GDP per capita (2015)",
+                "Child mortality under 5 (2010)",
+                "Piped water (\\%, 2010)",
+                "Trash collection (\\%, 2010)",
+                "Electricity access (\\%, 2010)",
+                "Total revenues p.c. (2015)",
+                "Current revenues p.c. (2015)",
+                "Local tax revenues p.c. (2015)",
+                "Capital revenues p.c. (2015)")
 
-# ---- Summary function ----
+# ---- Compute means ----
 
-col_means <- function(dt, vars) {
-  sapply(vars, function(v) {
-    x <- dt[[v]]
-    if (all(is.na(x))) return(NA_real_)
-    mean(x, na.rm = TRUE)
-  })
+col_means <- function(dt) {
+  sapply(vars, function(v) mean(dt[[v]], na.rm = TRUE))
 }
 
-# ---- Tab 1: In-sample vs. outside-sample ----
+means_in  <- col_means(mun[in_sample == 1])
+means_out <- col_means(mun[in_sample == 0])
 
-means_in  <- col_means(mun[in_sample == 1], vars)
-means_out <- col_means(mun[in_sample == 0], vars)
+# ---- Tab 1: In-sample vs. outside-sample ----
 
 tab <- data.frame(
   Variable       = var_labels,
@@ -72,21 +61,21 @@ tab <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Format as LaTeX
 latex_tab <- kableExtra::kable(tab, format = "latex", booktabs = TRUE,
                                col.names = c("Variable", "In-sample", "Outside-sample"),
                                escape = FALSE,
                                caption = "Descriptive Statistics: Municipalities") |>
   kableExtra::kable_styling(latex_options = c("hold_position"))
 
-writeLines(latex_tab, file.path(table_output, "descriptive_statistics_municipalities.tex"))
+writeLines(latex_tab,
+           file.path(table_output, "descriptive_statistics_municipalities.tex"))
 
-# ---- Tab 1 (by state): one column per in-sample state + Outside ----
+# ---- Tab 1 (by state) ----
 
-means_states <- lapply(SAMPLE_STATES, function(s) {
-  col_means(mun[sigla_uf == s], vars)
-})
-names(means_states) <- SAMPLE_STATES
+means_states <- setNames(
+  lapply(SAMPLE_STATES, function(s) col_means(mun[sigla_uf == s])),
+  SAMPLE_STATES
+)
 
 tab_state <- as.data.frame(
   c(list(Variable = var_labels),
@@ -95,10 +84,8 @@ tab_state <- as.data.frame(
   stringsAsFactors = FALSE
 )
 
-col_names_state <- c("Variable", SAMPLE_STATES, "Outside-sample")
-
 latex_tab_state <- kableExtra::kable(tab_state, format = "latex", booktabs = TRUE,
-                                     col.names = col_names_state,
+                                     col.names = c("Variable", SAMPLE_STATES, "Outside-sample"),
                                      escape = FALSE,
                                      caption = "Descriptive Statistics: Municipalities by State") |>
   kableExtra::kable_styling(latex_options = c("hold_position", "scale_down"))

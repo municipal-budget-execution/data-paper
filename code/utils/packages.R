@@ -8,36 +8,22 @@
 if (!require("pacman", quietly = TRUE)) install.packages("pacman")
 
 pacman::p_load(
-  # Data manipulation
-  "data.table",
-  "dplyr",
-
-  # Plotting
-  "ggplot2",
-  "ggpubr",
-  "ggtext",
-
-  # Maps
-  "sf",
-  "geobr",
-
-  # Regression / econometrics
-  "fixest",
-  "binsreg",
-
-  # Tables
-  "modelsummary",
-  "kableExtra",
-
-  # Utilities
-  "here",
-  "DescTools",
-
-  # BigQuery (only needed for --redownload)
-  # "basedosdados",   # uncomment if re-downloading raw data
-
-  install = TRUE,
-  character.only = TRUE
+  char = c(
+    # Data manipulation
+    "data.table", "dplyr",
+    # Plotting
+    "ggplot2", "ggpubr", "ggtext",
+    # Maps
+    "sf", "geobr",
+    # Regression / econometrics
+    "fixest", "binsreg",
+    # Tables
+    "modelsummary", "kableExtra",
+    # Utilities
+    "here", "DescTools", "scales", "stringr", "tinytex"
+    # "basedosdados"  # uncomment only for --redownload
+  ),
+  install = TRUE
 )
 
 # Global options

@@ -4,7 +4,7 @@
 #   commitments, verifications, and payments (by municipality and by function).
 #
 # Input CSVs (pre-downloaded by code/build/ingest_bigquery.R):
-#   commitment_municipality_year.csv
+#   commitment_municipality_year.csv        — columns: ano, sigla_uf, id_municipio, ..., proportion
 #   commitment_function_municipality_year.csv
 #   verification_municipality_year.csv
 #   verification_function_municipality_year.csv
@@ -15,31 +15,46 @@ source(here::here("code/utils/paths.R"))
 source(here::here("code/utils/packages.R"))
 source(here::here("code/utils/set_theme_ggplots.R"))
 
-# ---- Helpers ----
+# ---- Constants ----
 
-STATES  <- c("CE", "MG", "PB", "PE", "PR", "RS", "SP")
-CAP     <- 25   # cap proportions at ±25 pp for display
+STATES <- c("CE", "MG", "PB", "PE", "PR", "RS", "SP")
+CAP    <- 25   # cap proportions at ±25 pp for display
 
-cap_proportion <- function(dt, col = "proportion") {
-  dt[[col]] <- pmax(pmin(dt[[col]], CAP), -CAP)
+# ---- Helper: load, standardise, filter ----
+
+load_validation_csv <- function(filename, filter_rs_pre2010 = TRUE) {
+  dt <- fread(file.path(input, filename))
+
+  # Standardise column names (all CSVs use ano/sigla_uf)
+  setnames(dt, "ano",      "year",  skip_absent = TRUE)
+  setnames(dt, "sigla_uf", "state", skip_absent = TRUE)
+
+  # Drop infinite / NA proportions
+  dt <- dt[is.finite(proportion) & !is.na(proportion)]
+
+  # Known data quality filter
+  if (filter_rs_pre2010 && "year" %in% names(dt))
+    dt <- dt[!(state == "RS" & year < 2010)]
+
+  dt <- dt[state %in% STATES]
+
+  # Cap at ±25 pp
+  dt[, proportion := pmax(pmin(proportion, CAP), -CAP)]
   dt
 }
 
-# Build a 7-panel (one per state) histogram of proportion differences
-make_histogram_plot <- function(dt, title_label) {
+# ---- Helper: 7-panel histogram (one per state) ----
 
-  # Ensure state ordering
+make_histogram_plot <- function(dt, x_label) {
   dt[, state := factor(state, levels = STATES)]
-
-  # State-level mean labels
   means <- dt[, .(mean_val = mean(proportion, na.rm = TRUE)), by = state]
 
   ggplot(dt, aes(x = proportion)) +
     geom_histogram(bins = 60, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
     geom_vline(xintercept = 0, color = "black", linewidth = 0.5, linetype = "dashed") +
     geom_vline(data = means, aes(xintercept = mean_val),
-               color = "#C0392B", linewidth = 0.7, linetype = "solid") +
-    scale_x_continuous(title_label,
+               color = "#C0392B", linewidth = 0.7) +
+    scale_x_continuous(x_label,
                        limits = c(-CAP - 0.5, CAP + 0.5),
                        breaks = seq(-20, 20, by = 10)) +
     scale_y_continuous("Frequency") +
@@ -50,107 +65,77 @@ make_histogram_plot <- function(dt, title_label) {
           strip.text = element_text(size = 11, family = "LM Roman 10"))
 }
 
-# ---- Load and prepare each dataset ----
+# ---- Helper: year-panel histogram (for one state × 8 years) ----
 
-load_and_prep <- function(filename, filter_rs_pre2010 = TRUE) {
-  dt <- fread(file.path(input, filename))
+make_year_hist <- function(dt, state_code, years, x_label) {
+  dt <- dt[state == state_code & year %in% years]
+  dt[, year := factor(year)]
 
-  # Drop rows with infinite or NA proportions
-  dt <- dt[is.finite(proportion) & !is.na(proportion)]
-
-  # Exclude RS data before 2010 (known data quality issue)
-  if (filter_rs_pre2010 && "year" %in% names(dt)) {
-    dt <- dt[!(state == "RS" & year < 2010)]
-  }
-
-  # Keep only the states in sample
-  dt <- dt[state %in% STATES]
-
-  cap_proportion(dt)
+  ggplot(dt, aes(x = proportion)) +
+    geom_histogram(bins = 50, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
+    geom_vline(xintercept = 0, color = "black", linewidth = 0.5, linetype = "dashed") +
+    scale_x_continuous(x_label,
+                       limits = c(-CAP - 0.5, CAP + 0.5),
+                       breaks = seq(-20, 20, by = 10)) +
+    scale_y_continuous("Frequency") +
+    facet_wrap(~year, nrow = 2, scales = "free_y") +
+    set_theme(axis_line_x = element_line(), axis_line_y = element_line(),
+              x_text_size = 11, y_text_size = 11, size = 12) +
+    theme(strip.background = element_rect(fill = "gray90", colour = "black"),
+          strip.text = element_text(size = 11, family = "LM Roman 10"))
 }
 
 # ---- Fig 3: Commitment (by municipality) ----
 
-dt_comm <- load_and_prep("commitment_municipality_year.csv")
-p_comm  <- make_histogram_plot(dt_comm, "% Difference (Commitment)")
+dt_comm <- load_validation_csv("commitment_municipality_year.csv")
 ggsave(file.path(graph_output, "validation_siconfi_commitment.pdf"),
-       p_comm, width = 12, height = 7, device = cairo_pdf)
+       make_histogram_plot(dt_comm, "% Difference (Commitment)"),
+       width = 12, height = 7, device = cairo_pdf)
 
 # ---- Fig A1: Commitment (by function) ----
 
-dt_comm_fn <- load_and_prep("commitment_function_municipality_year.csv")
-p_comm_fn  <- make_histogram_plot(dt_comm_fn, "% Difference (Commitment by Function)")
+dt_comm_fn <- load_validation_csv("commitment_function_municipality_year.csv")
 ggsave(file.path(graph_output, "validation_siconfi_commitment_function.pdf"),
-       p_comm_fn, width = 12, height = 7, device = cairo_pdf)
+       make_histogram_plot(dt_comm_fn, "% Difference (Commitment by Function)"),
+       width = 12, height = 7, device = cairo_pdf)
 
 # ---- Fig 4: Verification (by municipality) ----
 
-dt_verif <- load_and_prep("verification_municipality_year.csv")
-p_verif  <- make_histogram_plot(dt_verif, "% Difference (Verification)")
+dt_verif <- load_validation_csv("verification_municipality_year.csv")
 ggsave(file.path(graph_output, "validation_siconfi_verification.pdf"),
-       p_verif, width = 12, height = 7, device = cairo_pdf)
+       make_histogram_plot(dt_verif, "% Difference (Verification)"),
+       width = 12, height = 7, device = cairo_pdf)
 
 # ---- Fig A2: Verification (by function) ----
 
-dt_verif_fn <- load_and_prep("verification_function_municipality_year.csv")
-p_verif_fn  <- make_histogram_plot(dt_verif_fn, "% Difference (Verification by Function)")
+dt_verif_fn <- load_validation_csv("verification_function_municipality_year.csv")
 ggsave(file.path(graph_output, "validation_siconfi_verification_function.pdf"),
-       p_verif_fn, width = 12, height = 7, device = cairo_pdf)
+       make_histogram_plot(dt_verif_fn, "% Difference (Verification by Function)"),
+       width = 12, height = 7, device = cairo_pdf)
 
 # ---- Fig 5: Payment (by municipality) ----
 
-dt_pay <- load_and_prep("payment_municipality_year.csv")
-p_pay  <- make_histogram_plot(dt_pay, "% Difference (Payment)")
+dt_pay <- load_validation_csv("payment_municipality_year.csv")
 ggsave(file.path(graph_output, "validation_siconfi_payment.pdf"),
-       p_pay, width = 12, height = 7, device = cairo_pdf)
+       make_histogram_plot(dt_pay, "% Difference (Payment)"),
+       width = 12, height = 7, device = cairo_pdf)
 
 # ---- Fig A3: Payment (by function) ----
 
-dt_pay_fn <- load_and_prep("payment_function_municipality_year.csv")
-p_pay_fn  <- make_histogram_plot(dt_pay_fn, "% Difference (Payment by Function)")
+dt_pay_fn <- load_validation_csv("payment_function_municipality_year.csv")
 ggsave(file.path(graph_output, "validation_siconfi_payment_function.pdf"),
-       p_pay_fn, width = 12, height = 7, device = cairo_pdf)
+       make_histogram_plot(dt_pay_fn, "% Difference (Payment by Function)"),
+       width = 12, height = 7, device = cairo_pdf)
 
-# ---- Fig A4a: Payment by year — PR ----
+# ---- Fig A4a: Payment by year — PR (2013-2020) ----
 
-dt_pay_pr <- load_and_prep("payment_municipality_year.csv", filter_rs_pre2010 = FALSE)
-dt_pay_pr <- dt_pay_pr[state == "PR" & year %in% 2013:2020]
-dt_pay_pr[, year := factor(year)]
-
-p_pr <- ggplot(dt_pay_pr, aes(x = proportion)) +
-  geom_histogram(bins = 50, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
-  geom_vline(xintercept = 0, color = "black", linewidth = 0.5, linetype = "dashed") +
-  scale_x_continuous("% Difference (Payment — PR)",
-                     limits = c(-CAP - 0.5, CAP + 0.5),
-                     breaks = seq(-20, 20, by = 10)) +
-  scale_y_continuous("Frequency") +
-  facet_wrap(~year, nrow = 2, scales = "free_y") +
-  set_theme(axis_line_x = element_line(), axis_line_y = element_line(),
-            x_text_size = 11, y_text_size = 11, size = 12) +
-  theme(strip.background = element_rect(fill = "gray90", colour = "black"),
-        strip.text = element_text(size = 11, family = "LM Roman 10"))
-
+dt_pay_all <- load_validation_csv("payment_municipality_year.csv", filter_rs_pre2010 = FALSE)
 ggsave(file.path(graph_output, "validation_siconfi_payment_pr.pdf"),
-       p_pr, width = 12, height = 7, device = cairo_pdf)
+       make_year_hist(dt_pay_all, "PR", 2013:2020, "% Difference (Payment — PR)"),
+       width = 12, height = 7, device = cairo_pdf)
 
-# ---- Fig A4b: Payment by year — MG ----
-
-dt_pay_mg <- load_and_prep("payment_municipality_year.csv", filter_rs_pre2010 = FALSE)
-dt_pay_mg <- dt_pay_mg[state == "MG" & year %in% 2014:2021]
-dt_pay_mg[, year := factor(year)]
-
-p_mg <- ggplot(dt_pay_mg, aes(x = proportion)) +
-  geom_histogram(bins = 50, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
-  geom_vline(xintercept = 0, color = "black", linewidth = 0.5, linetype = "dashed") +
-  scale_x_continuous("% Difference (Payment — MG)",
-                     limits = c(-CAP - 0.5, CAP + 0.5),
-                     breaks = seq(-20, 20, by = 10)) +
-  scale_y_continuous("Frequency") +
-  facet_wrap(~year, nrow = 2, scales = "free_y") +
-  set_theme(axis_line_x = element_line(), axis_line_y = element_line(),
-            x_text_size = 11, y_text_size = 11, size = 12) +
-  theme(strip.background = element_rect(fill = "gray90", colour = "black"),
-        strip.text = element_text(size = 11, family = "LM Roman 10"))
+# ---- Fig A4b: Payment by year — MG (2014-2021) ----
 
 ggsave(file.path(graph_output, "validation_siconfi_payment_mg.pdf"),
-       p_mg, width = 12, height = 7, device = cairo_pdf)
+       make_year_hist(dt_pay_all, "MG", 2014:2021, "% Difference (Payment — MG)"),
+       width = 12, height = 7, device = cairo_pdf)
