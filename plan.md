@@ -107,25 +107,25 @@ The `--redownload` flag is `false` by default because:
 - [x] Create `plan.md` (this file)
 - [x] Commit: `chore: add CLAUDE.md, plan.md, updated .gitignore`
 
-### Phase 2 — Create directory skeleton
-- [ ] Create `code/build/API_ComprasDados/`, `code/build/queries/`
-- [ ] Create `code/analysis/`, `code/utils/`, `code/archive/`, `docs/`
-- [ ] Add `.gitkeep` in each empty directory
-- [ ] Commit: `chore: create directory skeleton`
+### Phase 2 — Create directory skeleton ✅ done
+- [x] Create `code/build/API_ComprasDados/`, `code/build/queries/`
+- [x] Create `code/analysis/`, `code/utils/`, `code/archive/`, `docs/`
+- [x] Add `.gitkeep` in each empty directory
+- [x] Commit: `chore: create directory skeleton`
 
-### Phase 3 — Move non-analysis scripts
-- [ ] Move `API_ComprasDados/*` → `code/build/API_ComprasDados/`
-- [ ] Move `Query_HomeBias.R`, `Query_FederalComparison.R`, `Extract_Items_Mides.R` → `code/build/queries/`
-- [ ] Move `Functions/set_theme_ggplots.R`, `Functions/pdf_table.R` → `code/utils/`
-- [ ] Move `documentation_in_portuguese.pdf` → `docs/`
-- [ ] Move exploratory/diagnostic scripts → `code/archive/`
-- [ ] Remove now-empty `Functions/` directory
-- [ ] Commit: `refactor: move build, utils, and archive scripts to subdirectories`
+### Phase 3 — Move non-analysis scripts ✅ done
+- [x] Move `API_ComprasDados/*` → `code/build/API_ComprasDados/`
+- [x] Move `Query_HomeBias.R`, `Query_FederalComparison.R`, `Extract_Items_Mides.R` → `code/build/queries/`
+- [x] Move `Functions/set_theme_ggplots.R`, `Functions/pdf_table.R` → `code/utils/`
+- [x] Move `documentation_in_portuguese.pdf` → `docs/`
+- [x] Move exploratory/diagnostic scripts → `code/archive/`
+- [x] Remove now-empty `Functions/` directory
+- [x] Commit: `refactor: move build, utils, and archive scripts to subdirectories`
 
-### Phase 4 — Create shared utilities
-- [ ] Create `code/utils/paths.R`: extract multi-user path logic from `master.R`; define `input`, `graph_output`, `table_output`, `function_code`
-- [ ] Create `code/utils/packages.R`: declare all required R packages in one place; use `pacman::p_load()`
-- [ ] Commit: `refactor: extract shared utilities (paths, packages) to code/utils/`
+### Phase 4 — Create shared utilities ✅ done
+- [x] Create `code/utils/paths.R`: extract multi-user path logic from `master.R`; define `input`, `graph_output`, `table_output`, `function_code`
+- [x] Create `code/utils/packages.R`: declare all required R packages in one place; use `pacman::p_load()`
+- [x] Commit: `refactor: extract shared utilities (paths, packages) to code/utils/`
 
 ### Phase 5 — Split and refactor existing R analysis scripts
 
@@ -143,9 +143,9 @@ Splits:
 - `example_paper.R` → `code/analysis/fig_noncompetitive_hist.R` — Fig A7
 - `home_bias_regressions.R` → `code/analysis/tab_regressions_home_bias.R`
 
-- [ ] Commit per script: `refactor: add code/analysis/<script_name>.R`
+- [x] Commit per script: `refactor: add code/analysis/<script_name>.R`
 
-### Phase 6 — Convert Python notebooks to R
+### Phase 6 — Convert Python notebooks to R ✅ done
 
 Each notebook becomes a self-contained R script. For the conversion:
 - Use `data.table` / `dplyr` for data manipulation (replacing `pandas`)
@@ -175,18 +175,18 @@ For each conversion:
 4. Visually compare output against the accepted paper figures/tables
 5. Iterate until identical
 
-- [ ] Commit per conversion: `feat: convert <notebook_name> to R`
+- [x] Commit per conversion: `feat: convert <notebook_name> to R`
 
-### Phase 7 — Write `main.sh`
-- [ ] Write `main.sh` with `--redownload` flag logic
-- [ ] Wire all analysis scripts in the correct dependency order
+### Phase 7 — Write `main.sh` ✅ done
+- [x] Write `main.sh` with `--redownload` flag logic
+- [x] Wire all analysis scripts in the correct dependency order
 - [ ] Test full run end-to-end
-- [ ] Commit: `feat: add main.sh single entry point`
+- [x] Commit: `feat: add main.sh single entry point`
 
-### Phase 8 — Remove old master files and retire notebooks
-- [ ] Delete `master.R`, `master.ipynb` (replaced by `main.sh`)
-- [ ] Move all `.ipynb` files to `code/archive/` (originals, for reference)
-- [ ] Commit: `refactor: retire master.R, master.ipynb, and original notebooks`
+### Phase 8 — Remove old master files and retire notebooks ✅ done
+- [x] Archive `master.R`, `master.ipynb` → `code/archive/`
+- [x] Move all `.ipynb` files to `code/archive/` (originals, for reference)
+- [x] Commit: `feat: add main.sh; archive master.R, master.ipynb, and original notebooks`
 
 ### Phase 9 — Run full verification
 - [ ] Run `bash main.sh` end-to-end from a clean output directory
