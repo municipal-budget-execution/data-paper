@@ -82,5 +82,5 @@ p_exec <- make_missing_plot(
                       filter_rs_pre2010 = TRUE, filter_pb_pre2009 = TRUE)),
   panel_titles = c("Commitment", "Verification", "Payment")
 )
-ggsave(file.path(graph_output, "missing_municipalities_budget_execution_sample.pdf"),
+ggsave(file.path(graph_output, "missing_municipalities_budget_sample.pdf"),
        p_exec, width = 8, height = 10, device = cairo_pdf)

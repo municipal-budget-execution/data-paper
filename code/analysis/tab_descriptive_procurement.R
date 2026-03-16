@@ -153,4 +153,4 @@ latex_tab <- kableExtra::kable(display, format = "latex", booktabs = TRUE,
   kableExtra::kable_styling(latex_options = c("hold_position", "scale_down")) |>
   kableExtra::row_spec(nrow(display), bold = TRUE)
 
-writeLines(latex_tab, file.path(table_output, "descriptive_statistics.tex"))
+writeLines(latex_tab, file.path(table_output, "descriptive_statistics_procurement.tex"))

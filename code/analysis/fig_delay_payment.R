@@ -42,6 +42,8 @@ cdf_plot <- ggplot(data_plot, aes(wavg_delay)) +
         axis.title.x = element_markdown()) +
   geom_vline(xintercept = 30, color = "black", linewidth = 0.5, linetype = "dashed", alpha = 0.6)
 
+ggsave(filename = file.path(graph_output, "Dahis Fig 9a.png"),
+       cdf_plot, width = 14.14, height = 8.51, dpi = 400, units = "in", device = "png")
 ggsave(filename = file.path(graph_output, "cdf_sample_wavg_delay_2.jpeg"),
        cdf_plot, width = 14.14, height = 8.51, dpi = 400, units = "in", device = "jpeg")
 
@@ -64,6 +66,8 @@ hist_plot <- ggplot(data_plot, aes(wavg_delay)) +
         axis.title.x = element_markdown()) +
   geom_vline(xintercept = 30, color = "black", linewidth = 0.5, linetype = "dashed", alpha = 0.6)
 
+ggsave(filename = file.path(graph_output, "Dahis Fig 9b.png"),
+       hist_plot, width = 14.14, height = 8.51, dpi = 400, units = "in", device = "png")
 ggsave(filename = file.path(graph_output, "hist_sample_wavg_delay_2.jpeg"),
        hist_plot, width = 14.14, height = 8.51, dpi = 400, units = "in", device = "jpeg")
 

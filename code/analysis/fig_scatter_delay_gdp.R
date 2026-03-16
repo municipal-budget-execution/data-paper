@@ -35,5 +35,7 @@ binreg_plot <- binreg_object[["bins_plot"]] +
   scale_y_continuous("", limits = c(14, 24), breaks = seq(15, 23, by = 1)) +
   set_theme(axis_line_x = element_line(), axis_line_y = element_line())
 
+ggsave(filename = file.path(graph_output, "Dahis Fig 11.png"),
+       binreg_plot, width = 14.14, height = 8.51, dpi = 400, units = "in", device = "png")
 ggsave(filename = file.path(graph_output, "scatter_plot.jpeg"),
        binreg_plot, width = 14.14, height = 8.51, dpi = 400, units = "in", device = "jpeg")

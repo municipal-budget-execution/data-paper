@@ -28,7 +28,8 @@ if (Sys.getenv("USER") == "rdahis") {                         # Ricardo (Monash)
 }
 
 # ---- Input data ----
-input <- file.path(dropbox_dir, "Data/Raw")
+input        <- file.path(dropbox_dir, "Data/Raw")
+intermediate <- file.path(dropbox_dir, "Data/Intermediate")
 
 # ---- Outputs (relative to repo root, cleared by main.sh before each run) ----
 graph_output <- here::here("output/figures")

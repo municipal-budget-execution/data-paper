@@ -88,7 +88,7 @@ make_year_hist <- function(dt, state_code, years, x_label) {
 # ---- Fig 3: Commitment (by municipality) ----
 
 dt_comm <- load_validation_csv("commitment_municipality_year.csv")
-ggsave(file.path(graph_output, "validation_siconfi_commitment.pdf"),
+ggsave(file.path(graph_output, "Dahis Fig 3.pdf"),
        make_histogram_plot(dt_comm, "% Difference (Commitment)"),
        width = 12, height = 7, device = cairo_pdf)
 
@@ -102,7 +102,7 @@ ggsave(file.path(graph_output, "validation_siconfi_commitment_function.pdf"),
 # ---- Fig 4: Verification (by municipality) ----
 
 dt_verif <- load_validation_csv("verification_municipality_year.csv")
-ggsave(file.path(graph_output, "validation_siconfi_verification.pdf"),
+ggsave(file.path(graph_output, "Dahis Fig 4.pdf"),
        make_histogram_plot(dt_verif, "% Difference (Verification)"),
        width = 12, height = 7, device = cairo_pdf)
 
@@ -116,7 +116,7 @@ ggsave(file.path(graph_output, "validation_siconfi_verification_function.pdf"),
 # ---- Fig 5: Payment (by municipality) ----
 
 dt_pay <- load_validation_csv("payment_municipality_year.csv")
-ggsave(file.path(graph_output, "validation_siconfi_payment.pdf"),
+ggsave(file.path(graph_output, "Dahis Fig 5.pdf"),
        make_histogram_plot(dt_pay, "% Difference (Payment)"),
        width = 12, height = 7, device = cairo_pdf)
 

@@ -12,15 +12,16 @@ pacman::p_load(
     # Data manipulation
     "data.table", "dplyr",
     # Plotting
-    "ggplot2", "ggpubr", "ggtext",
+    "ggplot2", "ggpubr", "ggtext", "ggrepel",
     # Maps
     "sf", "geobr",
     # Regression / econometrics
-    "fixest", "binsreg",
+    "fixest", "binsreg", "rdrobust",
     # Tables
     "modelsummary", "kableExtra",
-    # Utilities
-    "here", "DescTools", "scales", "stringr", "tinytex"
+    # Data I/O and utilities
+    "here", "DescTools", "scales", "stringr", "stringi", "tinytex",
+    "readxl", "haven", "janitor"
     # "basedosdados"  # uncomment only for --redownload
   ),
   install = TRUE

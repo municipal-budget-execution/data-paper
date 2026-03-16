@@ -94,6 +94,8 @@ ggsave(file.path(graph_output, "wavg_delay_2018.pdf"),
        p_delay, width = 8, height = 10, device = cairo_pdf)
 ggsave(file.path(graph_output, "wavg_delay_2018.png"),
        p_delay, width = 8, height = 10, bg = "transparent")
+ggsave(file.path(graph_output, "Dahis Fig 10.png"),
+       p_delay, width = 8, height = 10, bg = "transparent")
 
 # ---- Fig A5: Share of payments > 30 days ----
 

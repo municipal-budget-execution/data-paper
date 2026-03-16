@@ -62,9 +62,11 @@ run_script "tab_descriptive_execution.R"
 # Validation figures
 run_script "fig_validation_siconfi.R"
 
-# Home bias figures and table
+# Home bias figures and tables
 run_script "fig_home_bias.R"
+run_script "fig_home_bias_federal.R"   # needs Data/Intermediate (built by BuildHomeBiasFederalEntities.R)
 run_script "tab_regressions_home_bias.R"
+run_script "fig_waiver_thresholds.R"   # Fig 6a/6b; needs Data/Intermediate (licitacoes_2021 combined)
 
 # Payment delay figures and tables
 run_script "fig_delay_payment.R"
@@ -74,6 +76,23 @@ run_script "tab_regressions_delay.R"
 
 # Appendix figures
 run_script "fig_noncompetitive_hist.R"
+
+# Political economy (RDD)
+MAYORS_DTA="$REPO_ROOT/../MiDES-data-paper-replication/Data/Intermediate/mayors.dta"
+if [ -f "$MAYORS_DTA" ]; then
+  run_script "fig_rdd_mayors.R"        # Fig 12 + Tab 6
+else
+  echo "    --> fig_rdd_mayors.R  [SKIPPED — mayors.dta not found at Data/Intermediate/mayors.dta]"
+fi
+
+# Appendix: expenditure composition and procurement platform coverage
+FINBRA_STATE="$REPO_ROOT/../MiDES-data-paper-replication/Data/Intermediate/finbra_state_elemento.csv"
+if [ -f "$FINBRA_STATE" ]; then
+  run_script "fig_expenditure_composition.R"  # needs Data/Intermediate FINBRA files
+else
+  echo "    --> fig_expenditure_composition.R  [SKIPPED — FINBRA files not found in Data/Intermediate/]"
+fi
+run_script "tab_uasg_esferas.R"
 
 # Data quality appendix
 run_script "fig_null_ids.R"

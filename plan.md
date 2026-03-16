@@ -69,7 +69,7 @@ Files **to archive** (exploratory/diagnostic, not producing paper outputs):
 - `Aux_API_PNCP.R` — auxiliary API helper
 - `WordCloud_Mides.R`, `WordCloud_Fed.R` — exploratory
 - `Figure_ElectronicAuction.R` — not in final paper (verify)
-- `ComparisonMIDES_Federal.do`, `Table_Uasg_comprasdados.do`, `Figure_Elemento.do` — Stata; verify outputs before archiving
+- `ComparisonMIDES_Federal.do`, `Table_Uasg_comprasdados.do`, `Figure_Elemento.do`, `RDD_mayors.do` — Stata originals; converted to R (see Phase 5b), kept for reference
 - All `.ipynb` files (replaced by R scripts)
 
 ---
@@ -177,6 +177,31 @@ For each conversion:
 
 - [x] Commit per conversion: `feat: convert <notebook_name> to R`
 
+**Correction to Phase 6 notebook mapping** — `home_bias_firms_characteristics.ipynb` was listed as "Fig 6–8" but this was wrong. Corrected mapping:
+- Fig 6a/6b = waiver thresholds → `fig_waiver_thresholds.R` (from Stata, see Phase 5b)
+- Fig 7 = by-state histogram → `fig_home_bias.R`
+- Fig 8 = federal vs municipal scatter → `fig_home_bias_federal.R`
+
+### Phase 5b — Convert Stata do files to R ✅ done
+
+The four Stata do files in `code/archive/` were incorrectly classified as "exploratory". They all produce outputs read by the paper's master tex file.
+
+| Do file | R replacement | Outputs |
+|---|---|---|
+| `ComparisonMIDES_Federal.do` | `code/analysis/fig_waiver_thresholds.R` | `Dahis Fig 6a.png`, `Dahis Fig 6b.png`, `distribution_tender_federal.png`, `distribution_items_federal.png` |
+| `RDD_mayors.do` | `code/analysis/fig_rdd_mayors.R` | `Dahis Fig 12a.pdf`, `Dahis Fig 12b.pdf`, `tables/RDD_mayors.tex` |
+| `Figure_Elemento.do` | `code/analysis/fig_expenditure_composition.R` | `composition_levels_expenditures.png` |
+| `Table_Uasg_comprasdados.do` | `code/analysis/tab_uasg_esferas.R` | `tables/uasg_esferas.tex` |
+
+Additional corrections made in this phase:
+- `tab_regressions_home_bias.R` rewritten: now runs the correct **tender-level** 3-column correlates regression from `participante_cnpj.csv` (original used wrong aggregate spec). Output renamed `reg_home_bias_correlates.tex` → `output/figures/` (paper reads via `\input{figures/...}`).
+- `fig_home_bias.R` updated: outputs renamed to correct filenames (`Dahis Fig 7.png`, appendix PNGs); generates LOESS scatter and by-type/by-population appendix figures.
+- `fig_home_bias_federal.R` created (based on `BuildHomeBiasFederalEntities.R`): produces `Dahis Fig 8.png`, `scatter_federal_localpurchase_weighted.png`, `regression_home_bias.tex`, `regression_home_bias_weighted.tex`, `reg_home_bias_correlates_weighted.tex`, weighted histogram appendix figures — all to `output/figures/`.
+- `code/utils/paths.R` updated: added `intermediate` variable pointing to `Data/Intermediate/`.
+- `main.sh` updated: wires all new scripts.
+
+- [x] Commit: `feat: convert Stata do files to R; fix home bias regression spec and output paths`
+
 ### Phase 7 — Write `main.sh` ✅ done
 - [x] Write `main.sh` with `--redownload` flag logic
 - [x] Wire all analysis scripts in the correct dependency order
@@ -188,16 +213,30 @@ For each conversion:
 - [x] Move all `.ipynb` files to `code/archive/` (originals, for reference)
 - [x] Commit: `feat: add main.sh; archive master.R, master.ipynb, and original notebooks`
 
-### Phase 9 — Run full verification
-- [ ] Run `bash main.sh` end-to-end from a clean output directory
-- [ ] Diff every output file against `../MiDES-data-paper-replication/WBER_Submission/FinalSubmission/figures/` and `tables/`
-- [ ] Fix any discrepancies
-- [ ] Commit: `test: full end-to-end verification pass`
+### Phase 9 — Run full verification ✅ done
+- [x] Run `bash main.sh` end-to-end from a clean output directory
+- [x] Diff every output file against `../MiDES-data-paper-replication/WBER_Submission/FinalSubmission/figures/` and `tables/`
+- [x] Fix any discrepancies (see fixes below)
+- [x] Commit: `test: full end-to-end verification pass`
 
-### Phase 10 — Update README
-- [ ] Rewrite README.md: structure, requirements (R only, no Python), `main.sh` usage, BigQuery setup for `--redownload`
-- [ ] Update table/figure → script mapping
-- [ ] Commit: `docs: rewrite README for final replication package`
+Fixes applied in Phase 9:
+- `code/utils/packages.R`: added missing packages (`ggrepel`, `rdrobust`, `stringi`, `readxl`, `haven`, `janitor`)
+- `code/analysis/fig_home_bias_federal.R`: fixed intermediate file path, column name (`modalidade`), GDP merge (use 2020 data), reduced to 2 models (year FE unidentified with single-year data), removed invalid `fixef = FALSE` from `etable()`
+- `code/analysis/tab_regressions_home_bias.R`: removed invalid `fixef = FALSE` from `etable()`
+- `code/analysis/tab_uasg_esferas.R`: added `tolower()` normalization for camelCase column names in `uasg.csv` and `orgaos.csv`
+- `main.sh`: added graceful skips for `fig_rdd_mayors.R` and `fig_expenditure_composition.R` when intermediate data absent
+- `code/analysis/fig_validation_siconfi.R`: renamed outputs to `Dahis Fig 3/4/5.pdf`
+- `code/analysis/fig_delay_payment.R`: added `Dahis Fig 9a/9b.png` outputs
+- `code/analysis/fig_delay_maps.R`: added `Dahis Fig 10.png` output
+- `code/analysis/fig_scatter_delay_gdp.R`: added `Dahis Fig 11.png` output
+- `code/analysis/fig_missing_municipalities.R`: fixed output filename (`missing_municipalities_budget_sample.pdf`)
+- `code/analysis/tab_descriptive_execution.R`: fixed output filename (`descriptive_statistics_budget_execution.tex`)
+- `code/analysis/tab_descriptive_procurement.R`: fixed output filename (`descriptive_statistics_procurement.tex`)
+
+### Phase 10 — Update README ✅ done
+- [x] Rewrite README.md: structure, requirements (R only, no Python), `main.sh` usage, BigQuery setup for `--redownload`
+- [x] Update table/figure → script mapping
+- [x] Commit: `docs: rewrite README for final replication package`
 
 ---
 
