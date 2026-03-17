@@ -48,8 +48,12 @@ load_validation_csv <- function(filename, filter_rs_pre2010 = TRUE) {
 make_histogram_plot <- function(dt, x_label) {
   dt[, state := factor(state, levels = STATES)]
 
+  # Use explicit breaks to ensure boundary bins are rendered (bins = 20, width = 2.5).
+  # Extending the last break slightly past CAP captures values capped at +CAP.
+  hist_breaks <- c(seq(-CAP, CAP - 2.5, by = 2.5), CAP + 0.001)
+
   ggplot(dt, aes(x = proportion)) +
-    geom_histogram(bins = 20, boundary = -CAP, closed = "left",
+    geom_histogram(breaks = hist_breaks, closed = "left",
                    fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
     geom_vline(xintercept = 0, color = "black", linewidth = 0.5, linetype = "dashed") +
     scale_x_continuous(x_label,
@@ -76,8 +80,10 @@ make_year_hist <- function(dt, state_code, years, x_label) {
   dt <- dt[state == state_code & year %in% years]
   dt[, year := factor(year)]
 
+  hist_breaks <- c(seq(-CAP, CAP - 2.5, by = 2.5), CAP + 0.001)
+
   ggplot(dt, aes(x = proportion)) +
-    geom_histogram(bins = 20, boundary = -CAP, closed = "left",
+    geom_histogram(breaks = hist_breaks, closed = "left",
                    fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
     geom_vline(xintercept = 0, color = "black", linewidth = 0.5, linetype = "dashed") +
     scale_x_continuous(x_label,

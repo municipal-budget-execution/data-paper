@@ -1,6 +1,6 @@
 # code/analysis/fig_home_bias.R
 #
-# Outputs (unweighted, from participante_cnpj.csv):
+# Outputs (unweighted, from mides_2021_items_alternative_price.csv):
 #   output/figures/Dahis Fig 7.png           — main paper Fig 7: by-state histogram
 #   output/figures/home_bias_by_type_unw.png — appendix: by purchase type (unweighted)
 #   output/figures/home_bias_population_unw.png — appendix: by population (unweighted)
@@ -9,11 +9,9 @@
 # Note: Fig 8 (Dahis Fig 8.png), all weighted variants, and the federal-vs-municipal
 #       scatter are produced by code/analysis/fig_home_bias_federal.R.
 #
-# Input CSVs (Data/Raw/):
-#   participante_cnpj.csv   — ano, sigla_uf, id_municipio, id_licitacao_bd, vencedor,
-#                             modalidade, id_municipio_1, sigla_uf_1,
-#                             data_inicio_atividade, opcao_simples, opcao_mei
-#   population.csv          — ano, sigla_uf, id_municipio, populacao
+# Input files:
+#   Data/Intermediate/Transparency_Federal_2021/mides_2021_items_alternative_price.csv
+#   Data/Intermediate/BigQuery/population.csv
 
 source(here::here("code/utils/paths.R"))
 source(here::here("code/utils/packages.R"))
@@ -23,77 +21,53 @@ STATES_SAMPLE <- c("CE", "MG", "PB", "PE", "PR", "RS")
 
 # ---- Load data ----
 
-part <- fread(file.path(bigquery, "participante_cnpj.csv"))
-pop  <- fread(file.path(bigquery, "population.csv"))
+mides <- fread(file.path(intermediate,
+                         "Transparency_Federal_2021/mides_2021_items_alternative_price.csv"))
+pop   <- fread(file.path(bigquery, "population.csv"))
 
 # ---- Construct variables ----
 
-part[, same_municipality := as.integer(!is.na(id_municipio_1) &
-                                          id_municipio_1 == id_municipio)]
-part[, licitacao_discricionaria := as.integer(modalidade %in% c(8L, 10L))]
+mides[, same_municipality := fcase(
+  id_municipio == id_municipio_1,  1L,
+  id_municipio != id_municipio_1,  0L,
+  default = NA_integer_
+)]
+mides[, licitacao_discricionaria := as.integer(modalidade %in% c("8", "10"))]
 
-# Filter: 2014+, in-sample states, winners with valid CNPJ (14-digit id)
-part <- part[ano >= 2014 & sigla_uf %in% STATES_SAMPLE & vencedor == 1]
+# Dedup: one row per (tender, firm CNPJ)
+mides <- unique(mides, by = c("id_licitacao_bd", "cnpj"))
 
-# Deduplicate: one row per (tender, firm)
-part <- unique(part, by = c("id_licitacao_bd", "id_municipio_1"), na.rm = FALSE)
+# Filter: 2014+, in-sample states, winners only
+mides <- mides[ano >= 2014 & sigla_uf %in% STATES_SAMPLE & vencedor == 1]
 
-# ---- Aggregate to tender municipality × year ----
+# ---- Aggregate to municipality (across all years) ----
+# One observation per municipality — matches archive code structure
 
-agg <- part[, .(
-  mean_same_mun = mean(same_municipality, na.rm = TRUE),
-  discretionary = mean(licitacao_discricionaria, na.rm = TRUE)
-), by = .(municipality = id_municipio, state = sigla_uf, year = ano)]
-
-# ---- Merge population; create above/below-median flag ----
-
-pop_2018 <- pop[ano == 2018, .(municipality = id_municipio, populacao)]
-agg <- merge(agg, pop_2018, by = "municipality", all.x = TRUE)
-med_pop <- median(agg$populacao, na.rm = TRUE)
-agg[, pop_above_median := as.integer(populacao >= med_pop)]
-
-# ---- Helper: two-panel histogram ----
-
-two_panel_hist <- function(dt, group_col, labels, x_label, show_mean_line = TRUE) {
-  dt <- dt[!is.na(get(group_col))]
-  dt[, group_label := factor(get(group_col), levels = c(0L, 1L), labels = labels)]
-  means <- dt[, .(mean_val = mean(mean_same_mun, na.rm = TRUE)), by = group_label]
-
-  p <- ggplot(dt, aes(x = mean_same_mun)) +
-    geom_histogram(bins = 60, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
-    scale_x_continuous(x_label, limits = c(0, 1), breaks = seq(0, 1, 0.25),
-                       labels = scales::percent_format(accuracy = 1)) +
-    scale_y_continuous("Number of municipalities") +
-    facet_wrap(~group_label, nrow = 1) +
-    set_theme(axis_line_x = element_line(), axis_line_y = element_line(),
-              x_text_size = 12, y_text_size = 12, size = 13) +
-    theme(strip.background = element_rect(fill = "gray90", colour = "black"),
-          strip.text = element_text(size = 12, family = "LM Roman 10"))
-
-  if (show_mean_line) {
-    p <- p + geom_vline(data = means, aes(xintercept = mean_val),
-                        color = "#C0392B", linewidth = 0.9, linetype = "dashed")
-  }
-  p
-}
+home_bias <- mides[, .(
+  same_municipality = mean(same_municipality, na.rm = TRUE),
+  discretionary     = mean(licitacao_discricionaria, na.rm = TRUE)
+), by = .(municipality = id_municipio, state = sigla_uf)]
 
 # ---- Fig 7 (main paper): by state ----
 # "Distribution of share of local suppliers across different states"
 
-STATES_6 <- c("CE", "MG", "RS", "PB", "PR", "PE")
-winners_s <- agg[state %in% STATES_6]
-winners_s[, state := factor(state, levels = STATES_6)]
-state_means <- winners_s[, .(mean_val = mean(mean_same_mun, na.rm = TRUE)), by = state]
+STATES_6 <- c("PB", "PE", "CE", "RS", "PR", "MG")
+winners_s <- home_bias[state %in% STATES_6]
+state_means <- winners_s[, .(mean_val = mean(same_municipality, na.rm = TRUE)), by = state]
 
-p_state <- ggplot(winners_s, aes(x = mean_same_mun)) +
-  geom_histogram(bins = 25, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
+p_state <- ggplot(winners_s, aes(x = same_municipality)) +
+  geom_histogram(aes(y = after_stat(width * density)), binwidth = 0.025,
+                 fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
   geom_vline(data = state_means, aes(xintercept = mean_val),
              color = "#C0392B", linewidth = 0.9, linetype = "dashed") +
-  scale_x_continuous("Share of local suppliers (winners)",
-                     limits = c(0, 1), breaks = seq(0, 1, 0.25),
-                     labels = scales::percent_format(accuracy = 1)) +
-  scale_y_continuous("Number of municipalities") +
-  facet_wrap(~state, nrow = 3, scales = "free_y") +
+  geom_text(data = state_means,
+            aes(x = mean_val + 0.02, label = sprintf("%.2f", mean_val)),
+            y = Inf, vjust = 2, hjust = 0, color = "#C0392B", size = 3.5,
+            family = "LM Roman 10") +
+  scale_x_continuous("Share of same-municipality suppliers",
+                     limits = c(0, 0.7)) +
+  scale_y_continuous("Share", limits = c(0, 0.15)) +
+  facet_wrap(~reorder(state, mean_val), nrow = 3) +
   set_theme(axis_line_x = element_line(), axis_line_y = element_line(),
             x_text_size = 11, y_text_size = 11, size = 12) +
   theme(strip.background = element_rect(fill = "gray90", colour = "black"),
@@ -105,28 +79,81 @@ ggsave(file.path(graph_output, "Dahis Fig 7.png"),
 # ---- Appendix: by purchase type (unweighted) ----
 # "Distribution of share of local suppliers, by type of purchase"
 
-agg[, competitive := as.integer(discretionary < 0.5)]
-p_type <- two_panel_hist(agg, "competitive",
-                         labels  = c("Non-competitive majority", "Competitive majority"),
-                         x_label = "Share of local suppliers (winners)")
+home_bias_comp <- mides[!is.na(licitacao_discricionaria), .(
+  same_municipality = mean(same_municipality, na.rm = TRUE)
+), by = .(municipality = id_municipio, licitacao_discricionaria)]
+
+home_bias_comp[, `:=`(
+  type_string     = fifelse(licitacao_discricionaria == 1,
+                            "Non-competitive tender", "Competitive tender"),
+  average_modality = mean(same_municipality, na.rm = TRUE)
+), by = licitacao_discricionaria]
+
+mean_comp <- unique(home_bias_comp[, .(type_string, average_modality)])
+
+p_type <- ggplot(home_bias_comp, aes(x = same_municipality)) +
+  geom_histogram(aes(y = after_stat(width * density)), binwidth = 0.025,
+                 fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
+  geom_vline(data = mean_comp, aes(xintercept = average_modality),
+             color = "#C0392B", linewidth = 0.9, linetype = "dashed") +
+  geom_text(data = mean_comp,
+            aes(x = average_modality + 0.02, label = sprintf("%.2f", average_modality)),
+            y = Inf, vjust = 2, hjust = 0, color = "#C0392B", size = 3.5,
+            family = "LM Roman 10") +
+  scale_x_continuous("Share of same-municipality suppliers", limits = c(0, 1)) +
+  scale_y_continuous("Share") +
+  facet_wrap(~type_string, nrow = 2) +
+  set_theme(axis_line_x = element_line(), axis_line_y = element_line(),
+            x_text_size = 12, y_text_size = 12, size = 13) +
+  theme(strip.background = element_rect(fill = "gray90", colour = "black"),
+        strip.text = element_text(size = 12, family = "LM Roman 10"))
+
 ggsave(file.path(graph_output, "home_bias_by_type_unw.png"),
        p_type, width = 12, height = 5, dpi = 300)
 
 # ---- Appendix: by population (unweighted) ----
 # "Distribution of share of local suppliers, by population size"
 
-p_pop <- two_panel_hist(agg, "pop_above_median",
-                        labels  = c("Below-median population", "Above-median population"),
-                        x_label = "Share of local suppliers (winners)")
+pop_2018 <- pop[ano == 2018, .(municipality = id_municipio, populacao)]
+pop_2018[, populacao := as.numeric(populacao)]
+med_pop <- median(pop_2018$populacao, na.rm = TRUE)
+
+home_bias_pop <- merge(home_bias, pop_2018, by = "municipality", all.x = TRUE)
+home_bias_pop[, pop_above_median := fifelse(populacao > med_pop, 1L, 0L, na = NA_integer_)]
+home_bias_pop[, `:=`(
+  type_string        = fifelse(pop_above_median == 1,
+                               "Population Above Median", "Population Below Median"),
+  average_population = mean(same_municipality, na.rm = TRUE)
+), by = pop_above_median]
+
+venc_pop <- home_bias_pop[!is.na(pop_above_median)]
+mean_pop  <- unique(venc_pop[, .(type_string, average_population)])
+
+p_pop <- ggplot(venc_pop, aes(x = same_municipality)) +
+  geom_histogram(aes(y = after_stat(width * density)), binwidth = 0.025,
+                 fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
+  geom_vline(data = mean_pop, aes(xintercept = average_population),
+             color = "#C0392B", linewidth = 0.9, linetype = "dashed") +
+  geom_text(data = mean_pop,
+            aes(x = average_population + 0.02, label = sprintf("%.2f", average_population)),
+            y = Inf, vjust = 2, hjust = 0, color = "#C0392B", size = 3.5,
+            family = "LM Roman 10") +
+  scale_x_continuous("Share of same-municipality suppliers", limits = c(0, 1)) +
+  scale_y_continuous("Share") +
+  facet_wrap(~type_string, nrow = 2) +
+  set_theme(axis_line_x = element_line(), axis_line_y = element_line(),
+            x_text_size = 12, y_text_size = 12, size = 13) +
+  theme(strip.background = element_rect(fill = "gray90", colour = "black"),
+        strip.text = element_text(size = 12, family = "LM Roman 10"))
+
 ggsave(file.path(graph_output, "home_bias_population_unw.png"),
        p_pop, width = 12, height = 5, dpi = 300)
 
 # ---- Appendix: LOESS scatter of home bias vs. population (unweighted) ----
-# "Share of local suppliers - by municipality size"
 
-pop_scatter_dt <- agg[!is.na(populacao) & populacao < 1e6]
+pop_scatter_dt <- home_bias_pop[!is.na(populacao) & populacao < 1e6]
 
-p_scatter <- ggplot(pop_scatter_dt, aes(x = populacao, y = mean_same_mun)) +
+p_scatter <- ggplot(pop_scatter_dt, aes(x = populacao, y = same_municipality)) +
   geom_smooth(method = "loess", se = TRUE, color = "#1A476F", fill = "#1A476F",
               alpha = 0.25, linewidth = 1.2) +
   geom_point(alpha = 0.3, size = 1, color = "#1A476F") +
