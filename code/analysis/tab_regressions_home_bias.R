@@ -106,5 +106,5 @@ tbl_out <- c(
   tbl_raw[(fs_idx - 1L):length(tbl_raw)]   # pre-FS \midrule through end
 )
 
-writeLines(tbl_out, file.path(graph_output, "reg_home_bias_correlates.tex"))
-cat("  Wrote: output/figures/reg_home_bias_correlates.tex\n")
+writeLines(tbl_out, file.path(table_output, "reg_home_bias_correlates.tex"))
+cat("  Wrote: output/tables/reg_home_bias_correlates.tex\n")

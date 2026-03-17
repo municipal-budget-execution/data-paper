@@ -23,7 +23,7 @@ home_bias[, (grep("^over_", names(home_bias))) := lapply(.SD, function(x) x * 10
 # Exclude PE (no procurement data); restrict to 2014-2020
 data_plot <- home_bias[state != "PE"][year %in% 2014:2020]
 
-# ---- Fig 9a: CDF of weighted average payment delay ----
+# ---- Fig 9b: CDF of weighted average payment delay ----
 
 cdf_plot <- ggplot(data_plot, aes(wavg_delay)) +
   stat_ecdf(geom = "line", size = 2, color = "#17375E", linewidth = 1.2) +
@@ -42,12 +42,12 @@ cdf_plot <- ggplot(data_plot, aes(wavg_delay)) +
         axis.title.x = element_markdown()) +
   geom_vline(xintercept = 30, color = "black", linewidth = 0.5, linetype = "dashed", alpha = 0.6)
 
-ggsave(filename = file.path(graph_output, "Dahis Fig 9a.png"),
+ggsave(filename = file.path(graph_output, "Dahis Fig 9b.png"),
        cdf_plot, width = 14.14, height = 8.51, dpi = 400, units = "in", device = "png")
 ggsave(filename = file.path(graph_output, "cdf_sample_wavg_delay_2.jpeg"),
        cdf_plot, width = 14.14, height = 8.51, dpi = 400, units = "in", device = "jpeg")
 
-# ---- Fig 9b: Histogram of weighted average payment delay ----
+# ---- Fig 9a: Histogram of weighted average payment delay ----
 
 hist_plot <- ggplot(data_plot, aes(wavg_delay)) +
   geom_histogram(linewidth = 0.8, color = "#0D3446", fill = "#1A476F", alpha = 1, bins = 100) +
@@ -66,7 +66,7 @@ hist_plot <- ggplot(data_plot, aes(wavg_delay)) +
         axis.title.x = element_markdown()) +
   geom_vline(xintercept = 30, color = "black", linewidth = 0.5, linetype = "dashed", alpha = 0.6)
 
-ggsave(filename = file.path(graph_output, "Dahis Fig 9b.png"),
+ggsave(filename = file.path(graph_output, "Dahis Fig 9a.png"),
        hist_plot, width = 14.14, height = 8.51, dpi = 400, units = "in", device = "png")
 ggsave(filename = file.path(graph_output, "hist_sample_wavg_delay_2.jpeg"),
        hist_plot, width = 14.14, height = 8.51, dpi = 400, units = "in", device = "jpeg")

@@ -77,6 +77,25 @@ run_script "tab_regressions_delay.R"
 # Appendix figures
 run_script "fig_noncompetitive_hist.R"
 
+# Deviations: SICONFI vs. tender values (needs Data/Intermediate/siconfi_compras.csv)
+SICONFI_COMPRAS="$REPO_ROOT/../MiDES-data-paper-replication/Data/Intermediate/siconfi_compras.csv"
+if [ -f "$SICONFI_COMPRAS" ]; then
+  run_script "fig_deviations_siconfi.R"
+else
+  echo "    --> fig_deviations_siconfi.R  [SKIPPED — siconfi_compras.csv not found in Data/Intermediate/]"
+fi
+
+# Deviations: Parana tender vs. commitment (needs Data/Intermediate/PR_empenho_licitacao.csv)
+PR_DEVIATIONS="$REPO_ROOT/../MiDES-data-paper-replication/Data/Intermediate/PR_empenho_licitacao.csv"
+if [ -f "$PR_DEVIATIONS" ]; then
+  run_script "fig_deviations_parana.R"
+else
+  echo "    --> fig_deviations_parana.R  [SKIPPED — PR_empenho_licitacao.csv not found in Data/Intermediate/]"
+fi
+
+# Word clouds (needs Data/Raw/mides_2021_items.csv and Data/Intermediate federal RDS)
+run_script "fig_wordclouds.R"
+
 # Political economy (RDD)
 MAYORS_DTA="$REPO_ROOT/../MiDES-data-paper-replication/Data/Intermediate/mayors.dta"
 if [ -f "$MAYORS_DTA" ]; then

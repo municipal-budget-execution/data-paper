@@ -86,21 +86,21 @@ winners_s[, state := factor(state, levels = STATES_6)]
 state_means <- winners_s[, .(mean_val = mean(mean_same_mun, na.rm = TRUE)), by = state]
 
 p_state <- ggplot(winners_s, aes(x = mean_same_mun)) +
-  geom_histogram(bins = 50, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
+  geom_histogram(bins = 25, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
   geom_vline(data = state_means, aes(xintercept = mean_val),
              color = "#C0392B", linewidth = 0.9, linetype = "dashed") +
   scale_x_continuous("Share of local suppliers (winners)",
                      limits = c(0, 1), breaks = seq(0, 1, 0.25),
                      labels = scales::percent_format(accuracy = 1)) +
   scale_y_continuous("Number of municipalities") +
-  facet_wrap(~state, nrow = 2, scales = "free_y") +
+  facet_wrap(~state, nrow = 3, scales = "free_y") +
   set_theme(axis_line_x = element_line(), axis_line_y = element_line(),
             x_text_size = 11, y_text_size = 11, size = 12) +
   theme(strip.background = element_rect(fill = "gray90", colour = "black"),
         strip.text = element_text(size = 12, family = "LM Roman 10"))
 
 ggsave(file.path(graph_output, "Dahis Fig 7.png"),
-       p_state, width = 12, height = 7, dpi = 300)
+       p_state, width = 8, height = 6, dpi = 300)
 
 # ---- Appendix: by purchase type (unweighted) ----
 # "Distribution of share of local suppliers, by type of purchase"

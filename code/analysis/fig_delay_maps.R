@@ -90,8 +90,6 @@ p_delay <- ggpubr::ggarrange(
   choropleth_panel(map_ss, state_ss, "delay_bin", "Days"),
   ncol = 1, nrow = 2, common.legend = TRUE, legend = "right"
 )
-ggsave(file.path(graph_output, "wavg_delay_2018.pdf"),
-       p_delay, width = 8, height = 10, device = cairo_pdf)
 ggsave(file.path(graph_output, "wavg_delay_2018.png"),
        p_delay, width = 8, height = 10, bg = "transparent")
 ggsave(file.path(graph_output, "Dahis Fig 10.png"),
@@ -104,7 +102,5 @@ p_o30 <- ggpubr::ggarrange(
   choropleth_panel(map_ss, state_ss, "over30_bin", "% > 30 days"),
   ncol = 1, nrow = 2, common.legend = TRUE, legend = "right"
 )
-ggsave(file.path(graph_output, "over30_delay_2018.pdf"),
-       p_o30, width = 8, height = 10, device = cairo_pdf)
 ggsave(file.path(graph_output, "over30_delay_2018.png"),
        p_o30, width = 8, height = 10, bg = "transparent")

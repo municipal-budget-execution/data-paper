@@ -50,7 +50,7 @@ make_histogram_plot <- function(dt, x_label) {
   means <- dt[, .(mean_val = mean(proportion, na.rm = TRUE)), by = state]
 
   ggplot(dt, aes(x = proportion)) +
-    geom_histogram(bins = 60, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
+    geom_histogram(bins = 20, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
     geom_vline(xintercept = 0, color = "black", linewidth = 0.5, linetype = "dashed") +
     geom_vline(data = means, aes(xintercept = mean_val),
                color = "#C0392B", linewidth = 0.7) +
@@ -58,7 +58,7 @@ make_histogram_plot <- function(dt, x_label) {
                        limits = c(-CAP - 0.5, CAP + 0.5),
                        breaks = seq(-20, 20, by = 10)) +
     scale_y_continuous("Frequency") +
-    facet_wrap(~state, nrow = 2, scales = "free_y") +
+    facet_wrap(~state, nrow = 4, scales = "free_y") +
     set_theme(axis_line_x = element_line(), axis_line_y = element_line(),
               x_text_size = 11, y_text_size = 11, size = 12) +
     theme(strip.background = element_rect(fill = "gray90", colour = "black"),
@@ -72,7 +72,7 @@ make_year_hist <- function(dt, state_code, years, x_label) {
   dt[, year := factor(year)]
 
   ggplot(dt, aes(x = proportion)) +
-    geom_histogram(bins = 50, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
+    geom_histogram(bins = 20, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
     geom_vline(xintercept = 0, color = "black", linewidth = 0.5, linetype = "dashed") +
     scale_x_continuous(x_label,
                        limits = c(-CAP - 0.5, CAP + 0.5),
@@ -88,54 +88,54 @@ make_year_hist <- function(dt, state_code, years, x_label) {
 # ---- Fig 3: Commitment (by municipality) ----
 
 dt_comm <- load_validation_csv("commitment_municipality_year.csv")
-ggsave(file.path(graph_output, "Dahis Fig 3.pdf"),
+ggsave(file.path(graph_output, "Dahis Fig 3.png"),
        make_histogram_plot(dt_comm, "% Difference (Commitment)"),
-       width = 12, height = 7, device = cairo_pdf)
+       width = 15, height = 9, dpi = 300)
 
 # ---- Fig A1: Commitment (by function) ----
 
 dt_comm_fn <- load_validation_csv("commitment_function_municipality_year.csv")
-ggsave(file.path(graph_output, "validation_siconfi_commitment_function.pdf"),
+ggsave(file.path(graph_output, "validation_siconfi_commitment_function.png"),
        make_histogram_plot(dt_comm_fn, "% Difference (Commitment by Function)"),
-       width = 12, height = 7, device = cairo_pdf)
+       width = 15, height = 9, dpi = 300)
 
 # ---- Fig 4: Verification (by municipality) ----
 
 dt_verif <- load_validation_csv("verification_municipality_year.csv")
-ggsave(file.path(graph_output, "Dahis Fig 4.pdf"),
+ggsave(file.path(graph_output, "Dahis Fig 4.png"),
        make_histogram_plot(dt_verif, "% Difference (Verification)"),
-       width = 12, height = 7, device = cairo_pdf)
+       width = 15, height = 9, dpi = 300)
 
 # ---- Fig A2: Verification (by function) ----
 
 dt_verif_fn <- load_validation_csv("verification_function_municipality_year.csv")
-ggsave(file.path(graph_output, "validation_siconfi_verification_function.pdf"),
+ggsave(file.path(graph_output, "validation_siconfi_verification_function.png"),
        make_histogram_plot(dt_verif_fn, "% Difference (Verification by Function)"),
-       width = 12, height = 7, device = cairo_pdf)
+       width = 15, height = 9, dpi = 300)
 
 # ---- Fig 5: Payment (by municipality) ----
 
 dt_pay <- load_validation_csv("payment_municipality_year.csv")
-ggsave(file.path(graph_output, "Dahis Fig 5.pdf"),
+ggsave(file.path(graph_output, "Dahis Fig 5.png"),
        make_histogram_plot(dt_pay, "% Difference (Payment)"),
-       width = 12, height = 7, device = cairo_pdf)
+       width = 15, height = 9, dpi = 300)
 
 # ---- Fig A3: Payment (by function) ----
 
 dt_pay_fn <- load_validation_csv("payment_function_municipality_year.csv")
-ggsave(file.path(graph_output, "validation_siconfi_payment_function.pdf"),
+ggsave(file.path(graph_output, "validation_siconfi_payment_function.png"),
        make_histogram_plot(dt_pay_fn, "% Difference (Payment by Function)"),
-       width = 12, height = 7, device = cairo_pdf)
+       width = 15, height = 9, dpi = 300)
 
 # ---- Fig A4a: Payment by year — PR (2013-2020) ----
 
 dt_pay_all <- load_validation_csv("payment_municipality_year.csv", filter_rs_pre2010 = FALSE)
-ggsave(file.path(graph_output, "validation_siconfi_payment_pr.pdf"),
+ggsave(file.path(graph_output, "validation_siconfi_payment_pr.png"),
        make_year_hist(dt_pay_all, "PR", 2013:2020, "% Difference (Payment — PR)"),
-       width = 12, height = 7, device = cairo_pdf)
+       width = 15, height = 9, dpi = 300)
 
 # ---- Fig A4b: Payment by year — MG (2014-2021) ----
 
-ggsave(file.path(graph_output, "validation_siconfi_payment_mg.pdf"),
+ggsave(file.path(graph_output, "validation_siconfi_payment_mg.png"),
        make_year_hist(dt_pay_all, "MG", 2014:2021, "% Difference (Payment — MG)"),
-       width = 12, height = 7, device = cairo_pdf)
+       width = 15, height = 9, dpi = 300)

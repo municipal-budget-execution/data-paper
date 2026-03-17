@@ -318,7 +318,7 @@ fixest::etable(m_fed1, m_fed2, tex = TRUE,
                dict    = dict_fed,
                fitstat = c("n", "my", "rmse", "r2", "ar2"),
                digits  = 3,
-               file    = file.path(graph_output, "regression_home_bias.tex"))
+               file    = file.path(table_output, "regression_home_bias.tex"))
 
 # Weighted
 m_fed1_w <- feols(same_municipality ~ municipal,
@@ -337,7 +337,7 @@ fixest::etable(m_fed1_w, m_fed2_w, tex = TRUE,
                            "id_municipio" = "Municipality"),
                fitstat = c("n", "r2", "my"),
                digits  = 3,
-               file    = file.path(graph_output, "regression_home_bias_weighted.tex"))
+               file    = file.path(table_output, "regression_home_bias_weighted.tex"))
 
 # ---- Weighted correlates regression (reg_home_bias_correlates_weighted.tex) ----
 # Items-level data (excludes PB, PE); dep var = same_municipality; unit = tender item
@@ -395,6 +395,6 @@ tbl_w_out <- c(
   fe_block_w,
   tbl_w_raw[(fs_idx - 1L):length(tbl_w_raw)]
 )
-writeLines(tbl_w_out, file.path(graph_output, "reg_home_bias_correlates_weighted.tex"))
+writeLines(tbl_w_out, file.path(table_output, "reg_home_bias_correlates_weighted.tex"))
 
 cat("  Wrote all fig_home_bias_federal outputs.\n")
