@@ -10,10 +10,10 @@ pacman::p_load("fixest", install = TRUE, character.only = TRUE)
 
 # ---- Load data ----
 
-data_munic <- fread(file.path(input, "full_budget_execution_index.csv"),
+data_munic <- fread(file.path(bigquery, "full_budget_execution_index.csv"),
                     showProgress = FALSE, encoding = "Latin-1")
 
-home_bias <- fread(file.path(input, "home_bias.csv"))
+home_bias <- fread(file.path(bigquery, "home_bias.csv"))
 home_bias <- home_bias[vencedor == 1]
 setnames(home_bias, c("municipality", "state", "year", "winner", "same_municipality", "same_state"))
 home_bias <- merge(data_munic, home_bias, by = c("municipality", "state", "year"), all.x = TRUE)

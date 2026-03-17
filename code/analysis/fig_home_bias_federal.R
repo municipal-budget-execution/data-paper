@@ -173,7 +173,7 @@ part_w <- part_w[ano >= 2014]
 part_w <- unique(part_w, by = c("id_licitacao_bd", "id_municipio_1"), na.rm = FALSE)
 
 # Aggregate to municipality
-pop <- fread(file.path(input, "population.csv"))
+pop <- fread(file.path(bigquery, "population.csv"))
 pop_2018 <- pop[ano == 2018, .(municipality = id_municipio, populacao)]
 
 agg_w <- part_w[, .(
@@ -343,7 +343,7 @@ fixest::etable(m_fed1_w, m_fed2_w, tex = TRUE,
 # Items-level data (excludes PB, PE); dep var = same_municipality; unit = tender item
 
 # GDP/population from 2020 (latest available year in full_budget_execution_index.csv)
-mun_char <- fread(file.path(input, "full_budget_execution_index.csv"),
+mun_char <- fread(file.path(bigquery, "full_budget_execution_index.csv"),
                   select = c("municipality", "state", "year", "gdp", "population"),
                   showProgress = FALSE)[year == 2020, .(municipality, state, gdp, population)]
 

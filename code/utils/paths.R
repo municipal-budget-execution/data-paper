@@ -31,6 +31,11 @@ if (Sys.getenv("USER") == "rdahis") {                         # Ricardo (Monash)
 input        <- file.path(dropbox_dir, "Data/Raw")
 intermediate <- file.path(dropbox_dir, "Data/Intermediate")
 
+# BigQuery extracts (SQL-originated CSVs downloaded by code/build/ingest_bigquery.R).
+# These are NOT raw data — they are the result of BigQuery queries against the
+# basedosdados.world_wb_mides.* and related datasets.
+bigquery     <- file.path(intermediate, "BigQuery")
+
 # ---- Outputs (relative to repo root, cleared by main.sh before each run) ----
 graph_output <- here::here("output/figures")
 table_output <- here::here("output/tables")

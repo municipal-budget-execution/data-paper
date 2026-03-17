@@ -19,7 +19,7 @@ pacman::p_load("fixest", install = TRUE, character.only = TRUE)
 
 # ---- Load data ----
 
-part <- fread(file.path(input, "participante_cnpj.csv"))
+part <- fread(file.path(bigquery, "participante_cnpj.csv"))
 
 # Filter to winners only
 part <- part[vencedor == 1]
@@ -43,7 +43,7 @@ setnames(part, c("id_municipio", "sigla_uf", "ano"),
                c("municipality",  "state",     "year"))
 
 # Municipality characteristics (GDP and population)
-mun_char <- fread(file.path(input, "full_budget_execution_index.csv"),
+mun_char <- fread(file.path(bigquery, "full_budget_execution_index.csv"),
                   select = c("municipality", "state", "year", "gdp", "population"),
                   showProgress = FALSE)
 

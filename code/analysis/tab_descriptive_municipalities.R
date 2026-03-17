@@ -15,7 +15,7 @@ pacman::p_load("kableExtra", install = TRUE, character.only = TRUE)
 
 # ---- Load data ----
 
-mun <- fread(file.path(input, "municipios.csv"))
+mun <- fread(file.path(bigquery, "municipios.csv"))
 
 SAMPLE_STATES <- c("RS", "PR", "SP", "MG", "CE", "PB", "PE")
 mun[, in_sample := as.integer(sigla_uf %in% SAMPLE_STATES)]

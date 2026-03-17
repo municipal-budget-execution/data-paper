@@ -6,7 +6,7 @@ source(here::here("code/utils/packages.R"))
 
 # ---- Load data ----
 
-data <- fread(file.path(input, "data_histogram_licitacao.csv"))
+data <- fread(file.path(bigquery, "data_histogram_licitacao.csv"))
 
 # ---- Fig A7: Histogram of non-competitive tender share ----
 

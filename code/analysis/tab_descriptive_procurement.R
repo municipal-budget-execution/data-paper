@@ -18,12 +18,12 @@ STATES <- c("CE", "MG", "PB", "PE", "PR", "RS", "SP")
 
 # ---- Load CSVs ----
 
-dt_stats    <- fread(file.path(input, "licitacao_stats_uf.csv"))
-dt_valor    <- fread(file.path(input, "licitacao_share_valor_uf.csv"))
-dt_item     <- fread(file.path(input, "merge_licitacao_item.csv"))
-dt_part     <- fread(file.path(input, "merge_licitacao_participante.csv"))
-dt_part_st  <- fread(file.path(input, "licitacao_participante_stats.csv"))
-dt_part_uf  <- fread(file.path(input, "licitacao_participante_stats_uf.csv"))
+dt_stats    <- fread(file.path(bigquery, "licitacao_stats_uf.csv"))
+dt_valor    <- fread(file.path(bigquery, "licitacao_share_valor_uf.csv"))
+dt_item     <- fread(file.path(bigquery, "merge_licitacao_item.csv"))
+dt_part     <- fread(file.path(bigquery, "merge_licitacao_participante.csv"))
+dt_part_st  <- fread(file.path(bigquery, "licitacao_participante_stats.csv"))
+dt_part_uf  <- fread(file.path(bigquery, "licitacao_participante_stats_uf.csv"))
 
 # Filter to in-sample states
 for (dt in list(dt_stats, dt_valor, dt_item, dt_part, dt_part_st, dt_part_uf)) {

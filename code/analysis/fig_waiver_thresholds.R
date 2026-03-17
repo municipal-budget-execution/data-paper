@@ -24,7 +24,7 @@ in_dir <- file.path(intermediate, "Transparency_Federal_2021")
 # ============================================================
 
 # ---- MiDES municipal tenders ----
-mides <- fread(file.path(input, "mides_2021_tenders.csv"))
+mides <- fread(file.path(bigquery, "mides_2021_tenders.csv"))
 
 mides[, modalidade_group := fcase(
   modalidade == 8L,                        1L,   # Waiver
@@ -157,7 +157,7 @@ ggsave(file.path(graph_output, "distribution_tender_federal.png"),
 # Part 2: Item-level comparison
 # ============================================================
 
-items_mides <- fread(file.path(input, "mides_2021_items.csv"))
+items_mides <- fread(file.path(bigquery, "mides_2021_items.csv"))
 items_mides[, federal := 0L]
 
 items_fed <- fread(file.path(in_dir, "licitacoes_items_2021.csv"))

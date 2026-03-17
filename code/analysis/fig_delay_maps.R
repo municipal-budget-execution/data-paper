@@ -2,11 +2,11 @@
 # Outputs: Fig 10 and Fig A5
 #   Choropleth maps of payment delay by municipality (2018).
 #
-# Input files (in Data/Raw/):
-#   full_budget_execution_index.csv   — budget data (municipality 7-digit code)
-#   region.csv                        — municipality → region lookup
-#   BRMUE250GC_SIR.shp               — municipality geometries (CD_GEOCMU)
-#   BRUFE250GC_SIR.shp               — state geometries
+# Input files:
+#   Data/Intermediate/BigQuery/full_budget_execution_index.csv  — budget data
+#   Data/Raw/region.csv                                         — municipality → region lookup
+#   Data/Raw/BRMUE250GC_SIR.shp                                — municipality geometries
+#   Data/Raw/BRUFE250GC_SIR.shp                                — state geometries
 
 source(here::here("code/utils/paths.R"))
 source(here::here("code/utils/packages.R"))
@@ -15,7 +15,7 @@ pacman::p_load("sf", "scales", install = TRUE, character.only = TRUE)
 
 # ---- Load data ----
 
-data_munic <- fread(file.path(input, "full_budget_execution_index.csv"),
+data_munic <- fread(file.path(bigquery, "full_budget_execution_index.csv"),
                     showProgress = FALSE, encoding = "Latin-1")
 
 data_2018 <- data_munic[year == 2018 & !is.na(wavg_delay)]

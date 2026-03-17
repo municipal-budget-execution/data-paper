@@ -23,15 +23,15 @@ STATES <- c("CE", "MG", "PB", "PE", "PR", "RS", "SP")
 
 # ---- Load CSVs ----
 
-dt_emp_liq  <- fread(file.path(input, "empenho_liquidacao.csv"))
-dt_emp_pag  <- fread(file.path(input, "empenho_pagamento.csv"))
-dt_emp      <- fread(file.path(input, "empenho.csv"))
-dt_liq      <- fread(file.path(input, "liquidacao.csv"))
-dt_pag      <- fread(file.path(input, "pagamento.csv"))
-dt_pag_ano  <- fread(file.path(input, "total_pagamento_ano.csv"))
-dt_emp_pe   <- fread(file.path(input, "empenho_pe.csv"))
-dt_lp_pe    <- fread(file.path(input, "liq_pag_pe.csv"))
-dt_ipca     <- fread(file.path(input, "ipca_anual.csv"))
+dt_emp_liq  <- fread(file.path(bigquery, "empenho_liquidacao.csv"))
+dt_emp_pag  <- fread(file.path(bigquery, "empenho_pagamento.csv"))
+dt_emp      <- fread(file.path(bigquery, "empenho.csv"))
+dt_liq      <- fread(file.path(bigquery, "liquidacao.csv"))
+dt_pag      <- fread(file.path(bigquery, "pagamento.csv"))
+dt_pag_ano  <- fread(file.path(bigquery, "total_pagamento_ano.csv"))
+dt_emp_pe   <- fread(file.path(bigquery, "empenho_pe.csv"))
+dt_lp_pe    <- fread(file.path(bigquery, "liq_pag_pe.csv"))
+dt_ipca     <- fread(file.path(input,   "ipca_anual.csv"))   # external IBGE data
 
 # ---- Deflate payment totals to 2021 BRL ----
 # total_pagamento_ano.csv has total_payment_billion per state-year (nominal BRL billions)

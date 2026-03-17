@@ -19,7 +19,7 @@ pacman::p_load("fixest", "haven", "rdrobust", install = TRUE, character.only = T
 
 # ---- Load and prepare tender data ----
 
-lic <- fread(file.path(input, "licitacao.csv"))
+lic <- fread(file.path(bigquery, "licitacao.csv"))
 lic[, discret_tender := as.integer(modalidade %in% c(8L, 10L))]
 lic <- lic[ano != 2021]  # no mayor data for 2021
 lic[, term := fcase(
@@ -32,7 +32,7 @@ non_comp <- lic[!is.na(term), .(discret_tender = mean(discret_tender, na.rm = TR
 
 # ---- Load and prepare participant data ----
 
-part <- fread(file.path(input, "participante_cnpj.csv"))
+part <- fread(file.path(bigquery, "participante_cnpj.csv"))
 part[, same_municipality := as.integer(!is.na(id_municipio_1) & id_municipio_1 == id_municipio)]
 part <- part[vencedor == 1 & ano != 2021]
 part[, term := fcase(

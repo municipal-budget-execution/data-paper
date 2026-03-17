@@ -16,7 +16,7 @@ STATES <- c("CE", "MG", "PB", "PR", "RS", "SP")
 load_siconfi_csv <- function(filename,
                              filter_rs_pre2010 = TRUE,
                              filter_pb_pre2009 = TRUE) {
-  dt <- fread(file.path(input, filename))
+  dt <- fread(file.path(bigquery, filename))
 
   # Use TCE (our data) year/state as the key
   setnames(dt, "year_tce",  "year",  skip_absent = TRUE)

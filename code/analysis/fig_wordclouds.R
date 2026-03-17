@@ -69,7 +69,7 @@ make_wordcloud <- function(text_vec, remove_extra, out_path) {
 # Part 1: MiDES municipal word clouds
 # ============================================================
 
-mides_path <- file.path(input, "mides_2021_items.csv")
+mides_path <- file.path(bigquery, "mides_2021_items.csv")
 if (!file.exists(mides_path)) {
   message("  --> fig_wordclouds.R [SKIPPED for MiDES — mides_2021_items.csv not found in Data/Raw/]")
 } else {

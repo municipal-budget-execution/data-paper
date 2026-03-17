@@ -23,8 +23,8 @@ STATES_SAMPLE <- c("CE", "MG", "PB", "PE", "PR", "RS")
 
 # ---- Load data ----
 
-part <- fread(file.path(input, "participante_cnpj.csv"))
-pop  <- fread(file.path(input, "population.csv"))
+part <- fread(file.path(bigquery, "participante_cnpj.csv"))
+pop  <- fread(file.path(bigquery, "population.csv"))
 
 # ---- Construct variables ----
 

@@ -43,7 +43,7 @@ make_null_plot <- function(dt) {
 # Columns: year, state, total_observations, total_commitments,
 #          total_null_commtiments (sic), total_committed, total_null_committed
 
-dt_comm <- fread(file.path(input, "null_budget_commitment_ids.csv"))
+dt_comm <- fread(file.path(bigquery, "null_budget_commitment_ids.csv"))
 dt_comm <- dt_comm[!(state == "RS" & year < 2010)][state %in% STATES]
 dt_comm[, proportion_ids   := 100 * total_null_commtiments / total_commitments]
 dt_comm[, proportion_value := 100 * total_null_committed   / total_committed]
@@ -55,7 +55,7 @@ ggsave(file.path(graph_output, "proporcao_nulos_empenhos.pdf"),
 # Columns: year, state, total_observations, total_verifications,
 #          total_null_verifications, total_verified, total_null_verified
 
-dt_verif <- fread(file.path(input, "null_budget_verification_ids.csv"))
+dt_verif <- fread(file.path(bigquery, "null_budget_verification_ids.csv"))
 dt_verif <- dt_verif[!(state == "RS" & year < 2010)][state %in% STATES]
 dt_verif[, proportion_ids   := 100 * total_null_verifications / total_verifications]
 dt_verif[, proportion_value := 100 * total_null_verified      / total_verified]
@@ -67,7 +67,7 @@ ggsave(file.path(graph_output, "proporcao_nulos_liquidacao.pdf"),
 # Columns: year, state, total_observations, total_payments,
 #          total_null_payments, total_paid, total_null_paid
 
-dt_pay <- fread(file.path(input, "null_budget_payment_ids.csv"))
+dt_pay <- fread(file.path(bigquery, "null_budget_payment_ids.csv"))
 dt_pay <- dt_pay[!(state == "RS" & year < 2010)][state %in% STATES]
 dt_pay[, proportion_ids   := 100 * total_null_payments / total_payments]
 dt_pay[, proportion_value := 100 * total_null_paid     / total_paid]
@@ -79,7 +79,7 @@ ggsave(file.path(graph_output, "proporcao_nulos_pagamento.pdf"),
 # Columns: year, state, total_observations, total_tenders,
 #          total_null_tenders, total_procurement_value, total_null_tenders_value
 
-dt_lic <- fread(file.path(input, "null_tender_ids.csv"))
+dt_lic <- fread(file.path(bigquery, "null_tender_ids.csv"))
 dt_lic <- dt_lic[state %in% STATES]
 dt_lic[, proportion_ids   := 100 * total_null_tenders       / total_tenders]
 dt_lic[, proportion_value := 100 * total_null_tenders_value / total_procurement_value]

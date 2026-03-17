@@ -23,7 +23,7 @@ CAP    <- 25   # cap proportions at ±25 pp for display
 # ---- Helper: load, standardise, filter ----
 
 load_validation_csv <- function(filename, filter_rs_pre2010 = TRUE) {
-  dt <- fread(file.path(input, filename))
+  dt <- fread(file.path(bigquery, filename))
 
   # Standardise column names (all CSVs use ano/sigla_uf)
   setnames(dt, "ano",      "year",  skip_absent = TRUE)

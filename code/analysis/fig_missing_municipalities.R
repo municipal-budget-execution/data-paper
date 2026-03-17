@@ -21,7 +21,7 @@ total_mun <- data.table(
 load_count_csv <- function(filename,
                            filter_rs_pre2010 = FALSE,
                            filter_pb_pre2009 = FALSE) {
-  dt <- fread(file.path(input, filename))
+  dt <- fread(file.path(bigquery, filename))
   # Standardise column names
   setnames(dt, "ano",      "year",  skip_absent = TRUE)
   setnames(dt, "sigla_uf", "state", skip_absent = TRUE)
