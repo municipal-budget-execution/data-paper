@@ -47,16 +47,21 @@ load_validation_csv <- function(filename, filter_rs_pre2010 = TRUE) {
 
 make_histogram_plot <- function(dt, x_label) {
   dt[, state := factor(state, levels = STATES)]
-  means <- dt[, .(mean_val = mean(proportion, na.rm = TRUE)), by = state]
 
   ggplot(dt, aes(x = proportion)) +
-    geom_histogram(bins = 20, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
+    geom_histogram(bins = 20, boundary = -CAP, closed = "left",
+                   fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
     geom_vline(xintercept = 0, color = "black", linewidth = 0.5, linetype = "dashed") +
-    geom_vline(data = means, aes(xintercept = mean_val),
-               color = "#C0392B", linewidth = 0.7) +
     scale_x_continuous(x_label,
                        limits = c(-CAP - 0.5, CAP + 0.5),
-                       breaks = seq(-20, 20, by = 10)) +
+                       breaks = seq(-25, 25, by = 5),
+                       labels = {
+                         brks <- seq(-25, 25, by = 5)
+                         lbs  <- as.character(brks)
+                         lbs[1] <- "<-25"
+                         lbs[length(lbs)] <- "25>"
+                         lbs
+                       }) +
     scale_y_continuous("Frequency") +
     facet_wrap(~state, nrow = 4, scales = "free_y") +
     set_theme(axis_line_x = element_line(), axis_line_y = element_line(),
@@ -72,11 +77,19 @@ make_year_hist <- function(dt, state_code, years, x_label) {
   dt[, year := factor(year)]
 
   ggplot(dt, aes(x = proportion)) +
-    geom_histogram(bins = 20, fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
+    geom_histogram(bins = 20, boundary = -CAP, closed = "left",
+                   fill = "#1A476F", color = "#0D3446", linewidth = 0.3) +
     geom_vline(xintercept = 0, color = "black", linewidth = 0.5, linetype = "dashed") +
     scale_x_continuous(x_label,
                        limits = c(-CAP - 0.5, CAP + 0.5),
-                       breaks = seq(-20, 20, by = 10)) +
+                       breaks = seq(-25, 25, by = 5),
+                       labels = {
+                         brks <- seq(-25, 25, by = 5)
+                         lbs  <- as.character(brks)
+                         lbs[1] <- "<-25"
+                         lbs[length(lbs)] <- "25>"
+                         lbs
+                       }) +
     scale_y_continuous("Frequency") +
     facet_wrap(~year, nrow = 2, scales = "free_y") +
     set_theme(axis_line_x = element_line(), axis_line_y = element_line(),
