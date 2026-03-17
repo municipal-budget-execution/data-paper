@@ -1,2 +1,54 @@
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# R
 .Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+Rplots.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+/build/
+.env
+.venv/
+venv/
+
+# Jupyter
+.jupyter/
+
+# Data files (large; stored in Dropbox/cloud, not git)
+*.csv
+*.parquet
+*.feather
+*.dta
+*.sas7bdat
+*.xlsx
+*.xls
+
+# Output (generated; not tracked in git)
+output/
+Output/
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# OS
+Thumbs.db
+desktop.ini
