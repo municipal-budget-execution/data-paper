@@ -59,7 +59,6 @@ table_4 <- c(table_4[1:10], "\\\\",
              "  Year Fixed Effects  & \\checkmark  & \\checkmark   & \\checkmark  & \\checkmark \\\\ ",
              "  State Fixed Effects   & \\checkmark  & \\checkmark   & \\checkmark  & \\checkmark\\\\",
              "\\midrule \\midrule", table_4[18:length(table_4)])
-table_4 <- table_4[!grepl("Clustered|Signif\\.", table_4)]
 
 pdf_table(table_4, file_name = file.path(table_output, "table_reg_4_columns.tex"))
 
@@ -115,6 +114,5 @@ table_5 <- c(
   "\\midrule",
   table_5[21:length(table_5)]
 )
-table_5 <- table_5[!grepl("Clustered|Signif\\.", table_5)]
 
 pdf_table(table_5, file_name = file.path(table_output, "reg_deviations.tex"))

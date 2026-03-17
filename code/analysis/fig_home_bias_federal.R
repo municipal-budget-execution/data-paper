@@ -314,11 +314,12 @@ m_fed1 <- feols(same_municipality ~ municipal,
 m_fed2 <- feols(same_municipality ~ municipal | modality_group + id_municipio,
                 data = local_reg, cluster = ~id_municipio^municipal)
 
-fixest::etable(m_fed1, m_fed2, tex = TRUE,
+tbl_fed_uw <- fixest::etable(m_fed1, m_fed2, tex = TRUE,
                dict    = dict_fed,
                fitstat = c("n", "my", "rmse", "r2", "ar2"),
-               digits  = 3,
-               file    = file.path(table_output, "regression_home_bias.tex"))
+               digits  = 3)
+tbl_fed_uw <- tbl_fed_uw[!grepl("Clustered|Signif\\.", tbl_fed_uw)]
+writeLines(tbl_fed_uw, file.path(table_output, "regression_home_bias.tex"))
 
 # Weighted
 m_fed1_w <- feols(same_municipality ~ municipal,
@@ -330,14 +331,15 @@ m_fed2_w <- feols(same_municipality ~ municipal | modality_group + id_municipio,
                   weights = ~pmax(sum_item_value_w, 0),
                   cluster = ~id_municipio^municipal)
 
-fixest::etable(m_fed1_w, m_fed2_w, tex = TRUE,
+tbl_fed_w <- fixest::etable(m_fed1_w, m_fed2_w, tex = TRUE,
                dict    = c("same_municipality" = "Share Local Purchases",
                            "municipal" = "Municipal buyer",
                            "modality_group" = "Modality",
                            "id_municipio" = "Municipality"),
                fitstat = c("n", "r2", "my"),
-               digits  = 3,
-               file    = file.path(table_output, "regression_home_bias_weighted.tex"))
+               digits  = 3)
+tbl_fed_w <- tbl_fed_w[!grepl("Clustered|Signif\\.", tbl_fed_w)]
+writeLines(tbl_fed_w, file.path(table_output, "regression_home_bias_weighted.tex"))
 
 # ---- Weighted correlates regression (reg_home_bias_correlates_weighted.tex) ----
 # Items-level data (excludes PB, PE); dep var = same_municipality; unit = tender item
@@ -395,6 +397,7 @@ tbl_w_out <- c(
   fe_block_w,
   tbl_w_raw[(fs_idx - 1L):length(tbl_w_raw)]
 )
+tbl_w_out <- tbl_w_out[!grepl("Clustered|Signif\\.", tbl_w_out)]
 writeLines(tbl_w_out, file.path(table_output, "reg_home_bias_correlates_weighted.tex"))
 
 cat("  Wrote all fig_home_bias_federal outputs.\n")

@@ -114,5 +114,6 @@ tbl_out <- c(
   tbl_raw[(fs_idx - 1L):length(tbl_raw)]  # pre-FS \midrule through end
 )
 
+tbl_out <- tbl_out[!grepl("Clustered|Signif\\.", tbl_out)]
 writeLines(tbl_out, file.path(table_output, "reg_home_bias_correlates.tex"))
 cat("  Wrote: output/tables/reg_home_bias_correlates.tex\n")

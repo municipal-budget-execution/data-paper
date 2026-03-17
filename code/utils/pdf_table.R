@@ -1,6 +1,8 @@
 pdf_table <- function(table, file_name) {
-  
-  
+
+  # Strip auto-generated footer notes (clustered SE description, signif codes)
+  table <- table[!grepl("Clustered|Signif\\.", table)]
+
   if (file.exists(file_name)) {
     
     unlink(file_name)
