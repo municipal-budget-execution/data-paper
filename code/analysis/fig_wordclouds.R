@@ -14,7 +14,7 @@ source(here::here("code/utils/paths.R"))
 source(here::here("code/utils/packages.R"))
 
 pacman::p_load("tm", "wordcloud", "SnowballC", "stopwords", "RColorBrewer",
-               install = TRUE, char = TRUE)
+               install = TRUE)
 
 set.seed(12345)
 
