@@ -54,11 +54,12 @@ fixest::setFixest_etable(digits.stats = 2, drop = c("Constant"))
 table_4 <- fixest::etable(reg_results[seq(2, 8, by = 2)],
                           fitstat = c("n", "my", "rmse", "r2", "ar2"),
                           digits = 3, tex = TRUE, dict = dict, notes = NULL,
-                          style.tex = style.tex(notes.intro = "", signif.code = NA))
+                          style.tex = style.tex(notes.intro = ""))
 table_4 <- c(table_4[1:10], "\\\\",
              "  Year Fixed Effects  & \\checkmark  & \\checkmark   & \\checkmark  & \\checkmark \\\\ ",
              "  State Fixed Effects   & \\checkmark  & \\checkmark   & \\checkmark  & \\checkmark\\\\",
              "\\midrule \\midrule", table_4[18:length(table_4)])
+table_4 <- table_4[!grepl("Clustered|Signif\\.", table_4)]
 
 pdf_table(table_4, file_name = file.path(table_output, "table_reg_4_columns.tex"))
 
@@ -101,7 +102,7 @@ table_5 <- fixest::etable(reg_results_5,
                           title   = "Correlation of deviations in percentage points from Treasury Data",
                           fitstat = c("n", "my", "rmse", "r2", "ar2"),
                           digits  = 3, tex = TRUE, dict = dict_5, notes = NULL,
-                          style.tex = style.tex(notes.intro = "", signif.code = NA))
+                          style.tex = style.tex(notes.intro = ""))
 
 table_5 <- c(
   table_5[1:6],
@@ -114,5 +115,6 @@ table_5 <- c(
   "\\midrule",
   table_5[21:length(table_5)]
 )
+table_5 <- table_5[!grepl("Clustered|Signif\\.", table_5)]
 
 pdf_table(table_5, file_name = file.path(table_output, "reg_deviations.tex"))
